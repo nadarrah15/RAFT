@@ -1,4 +1,15 @@
-package PACKAGE_NAME;
+import java.util.Scanner;
 
-public class ClientHandler {
+public class ClientHandler extends Thread {
+
+    Scanner scan;
+
+    public ClientHandler() {
+        scan = new Scanner(System.in);
+    }
+
+    @Override
+    public void run() {
+        //TODO Client input here
+    }
 }

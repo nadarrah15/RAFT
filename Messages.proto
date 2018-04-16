@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+package raft;
+
+option java_package = "com.example.raft";
+option java_outer_classname = "MessageProtos";
+
+message AppendEntries
+{
+	required int32 term = 0;
+    required string leaderId = 1;
+    required int32 prevLogIndex = 2;
+    required int32 prevLogTerm = 3;
+    repeated string entries = 4;
+    required leaderCommit = 5;
+}
+
+message AppendEntriesResponse
+{
+    required int32 term = 0;
+    required bool success = 1;
+}
+
+message RequestVote
+{
+    required int32 term = 0;
+    required string candidateId = 1;
+    required int32 lastLogIndex = 2;
+    required int32 lastLogTerm = 3;
+}
+
+message RequestVoteResponse
+{
+    required int32 term = 0;
+    required bool voteGranted = 1;
+}

@@ -4,6 +4,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.Queue;
 
 public class main {
 
@@ -14,7 +15,16 @@ public class main {
     private static int commitIndex; // Index of highest log entry known to be committed (initialized to 0)
     private static int lastApplied; // Index of highest log entry applied to state machine (initialized to 0)
 
-    //TODO Implement Client input queue, RPC outbox queue, RPC inbox queue
+    // TODO Implement Client input queue, RPC outbox queue, RPC inbox
+    // TODO Create class which wraps/unwraps client input, RPC messages
+    // TODO Replace generic types with said wrapper classes
+    private static Queue<Integer> clientInput;
+    private static Queue<Integer> rpcOutbox;
+    private static Queue<Integer> rpcInbox;
+
+    //TODO implement LinkedHashMap of threads handling interaction with other nodes
+    // A: Dedicate one thread to receiving all messages, one per node for sending messages?
+    // B: Have each thread can contain server socket and client socket for one-way connections?
 
     // Conveys node state
     private enum State {
@@ -45,6 +55,7 @@ public class main {
     }
 
     private static State performFollower() {
+        //TODO Implement
         // Loop through performFollower operations
         while (true) {
             break;
@@ -53,6 +64,7 @@ public class main {
     }
 
     private static State performCandidate() {
+        //TODO Implement
         // Loop through performCandidate operations
         while (true) {
             break;

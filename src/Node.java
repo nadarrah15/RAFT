@@ -15,7 +15,7 @@ public class Node {
     private int commitIndex; // Index of highest log entry known to be committed (initialized to 0)
     private int lastApplied; // Index of highest log entry applied to state machine (initialized to 0)
     private State state; // Defines follower, candidate, or leader state
-    private Queue<QueueEntry> taskQueue;
+    private Queue<QueueEntry> taskQueue;    //What is this?
 
     //TODO implement LinkedHashMap of threads handling interaction with other nodes
     // A: Dedicate one thread to receiving all messages, one per node for sending messages?
@@ -120,25 +120,41 @@ public class Node {
 
         currentTerm++;      //increment term
         int numVotes = 1;   //vote for self
-        //start election timer
 
         //Build the RequestVote RPC
-        MessageProtos.RequestVote.Builder reqestVoteBuilder = MessageProtos.RequestVote.newBuilder();
-        reqestVoteBuilder.setTerm(currentTerm)
+        MessageProtos.RequestVote.Builder requestVoteBuilder = MessageProtos.RequestVote.newBuilder();
+        requestVoteBuilder.setTerm(currentTerm)
                 .setCandidateId(id)
                 .setLastLogIndex(log.size() - 1);
         if (log.size() > 0)
-            reqestVoteBuilder.setLastLogTerm(log.get(log.size() - 1).term);
+            requestVoteBuilder.setLastLogTerm(log.get(log.size() - 1).term);
         else
-            reqestVoteBuilder.setLastLogTerm(0);
-        MessageProtos.RequestVote requestVote = reqestVoteBuilder.build();
+            requestVoteBuilder.setLastLogTerm(0);
+        MessageProtos.RequestVote requestVote = requestVoteBuilder.build();
 
         //Send RequestVote() to all
         sendAll(requestVote);
 
         while (true) {
-            /*
 
+            //start election timer
+            Timer electionTimer = new Timer();
+            electionTimer.schedule(new TimerTask(){
+
+                @Override
+                public void run(){
+                    //timeout action
+                }
+            }, 500); //timer currently set to 500 ms TODO decide how long until timeout
+
+
+            //Receive either a heartbeat or a vote
+            Message message;    //TODO recieve message
+            //TODO determine what the message type is
+            electionTimer.cancel();
+
+
+            /*
             if(We get a vote)
                 numVotes++;
 
@@ -150,10 +166,14 @@ public class Node {
 
             if(election times out)
                 return performCandidate();
-
             */
+
+            //TODO restart timer
             break;
         }
+
+
+
         return State.LEADER;
     }
 
@@ -198,4 +218,6 @@ public class Node {
     private void sendAll(com.google.protobuf.GeneratedMessageV3 message){
         //TODO: write code to send the message to all the nodes
     }
+
+
 }

@@ -15,11 +15,12 @@ public class Node {
     // TODO Replace generic types with said wrapper classes
     private Queue<Integer> clientInput;
     private Queue<Integer> rpcOutbox;
-    private static Queue<Integer> rpcInbox;
+    private Queue<Integer> rpcInbox;
 
     //TODO implement LinkedHashMap of threads handling interaction with other nodes
     // A: Dedicate one thread to receiving all messages, one per node for sending messages?
     // B: Have each thread can contain server socket and client socket for one-way connections?
+    // C: Dedicate one thread to receiving all messages, one per node for sending messages?
 
     // Conveys node state
     private enum State {

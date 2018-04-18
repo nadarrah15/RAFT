@@ -81,8 +81,6 @@ public class Node {
 
             if(numVotes >= majority)
                 return State.leader
-            else
-                keep waiting
 
             if(heartBeat is heard && heartBeat.currentTerm >= currentTerm)
                 return State.FOLLOWER;

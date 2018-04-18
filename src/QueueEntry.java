@@ -8,7 +8,7 @@ public class QueueEntry<E> {
     E body;
 
     private enum Type {
-        Input, Message
+        Input, MessageIn, MessageOut
     }
 
     public QueueEntry(int index, E body) {

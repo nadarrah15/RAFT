@@ -13,17 +13,12 @@ public class Node {
     private int commitIndex; // Index of highest log entry known to be committed (initialized to 0)
     private int lastApplied; // Index of highest log entry applied to state machine (initialized to 0)
     private State state; // Defines follower, candidate, or leader state
-
-    // TODO Implement Client input queue, RPC outbox queue, RPC inbox
-    // TODO Create class which wraps/unwraps client input, RPC messages
-    // TODO Replace generic types with said wrapper classes
-    private Queue<Integer> clientInput;
-    private Queue<Integer> rpcOutbox;
-    private static Queue<Integer> rpcInbox;
+    private Queue<QueueEntry> taskQueue;
 
     //TODO implement LinkedHashMap of threads handling interaction with other nodes
     // A: Dedicate one thread to receiving all messages, one per node for sending messages?
     // B: Have each thread can contain server socket and client socket for one-way connections?
+    // C: Dedicate one thread to receiving all messages, one per node for sending messages?
 
     // Conveys node state
     private enum State {
@@ -35,7 +30,7 @@ public class Node {
         currentTerm = 0;
         commitIndex = 0;
         state = State.FOLLOWER; // Begin life as Follower
-        ClientHandler clientHandler = new ClientHandler(); // Start new thread for console (local client) input
+        ClientHandler clientHandler = new ClientHandler(this); // Start new thread for console (local client) input
         clientHandler.start();
     }
 
@@ -55,6 +50,10 @@ public class Node {
                     break;
             }
         }
+    }
+
+    public void addToQueue(QueueEntry entry) {
+        taskQueue.add(entry);
     }
 
     private State performFollower() {
@@ -166,6 +165,7 @@ public class Node {
             //TODO replace with further implementation
             break;
         }
+
         return State.FOLLOWER;
     }
 }

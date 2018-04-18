@@ -1,6 +1,7 @@
 import java.net.InetAddress;
 import java.util.*;
 import java.util.concurrent.*;
+import com.example.raft.MessageProtos;
 
 public class Node {
 
@@ -66,19 +67,33 @@ public class Node {
         //TODO Implement
         // Loop through performFollower operations
         while (true) {
-            /*
-                if(AppendEntry.term > currentTerm)
-                    currentTerm = AppendEntry.term;
-
-
-             */
-
             try {
                 //Create Single-Thread for listener
                 Runnable r = () -> {
-                    //Listen for AppendEntry/request vote
-                    //if AppendEntry, Handle
-                    //if requestVote, check term, log, and vote
+                    /*
+                        Message message = incoming message;
+                        switch(message.getType()){
+                            case AppendEntries:
+                                if(AppendEntry.term > currentTerm)
+                                    currentTerm = AppendEntry.term;
+                                if(message.getBody().term < currentTerm)
+                                    return new AppendEntryResponse(false);
+                                if(prevLogIndex >= log.size() || log.get(prevLogIndex).getTerm() != prevLogTerm)
+                                    return new AppendEntryResponse(false);
+                                if(log.get(prevLogIndex).getTerm() != prevLogTerm){
+                                    log.removeRange(prevLogIndex, log.size());
+                                for(all entries in AppendEntries)
+                                    log.add(entry);
+                                if(leaderCommit > commitIndex){
+                                    commitIndex = min(leaderCommit, log.get(log.size() - 1).index);
+                                return new AppendEntryResponse(true);
+                            case RequestVote:
+                                if(term < currentTerm)
+                                    return new RequestVoteResponse(false);
+                                if((votedFor == null || votedFor == candidateId) && log is up to date)
+                                    return new RequestVoteResponse(true);
+
+                     */
                 };
 
                 Future<?> f = service.submit(r);
@@ -90,13 +105,7 @@ public class Node {
             } catch (ExecutionException e) {
                 System.out.println("Error in Entry Handling");
             }
-            //start timer
-            //listen for AppendEntry
-            //once the heartbeat stops, break loop
 
-            /*
-                if
-             */
             break;
         }
         return State.CANDIDATE;

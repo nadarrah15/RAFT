@@ -9,10 +9,6 @@ public class Node {
     private int commitIndex; // Index of highest log entry known to be committed (initialized to 0)
     private int lastApplied; // Index of highest log entry applied to state machine (initialized to 0)
     private State state; // Defines follower, candidate, or leader state
-
-    // TODO Implement Client input queue, RPC outbox queue, RPC inbox
-    // TODO Create class which wraps/unwraps client input, RPC messages
-    // TODO Replace generic types with said wrapper classes
     private Queue<QueueEntry> taskQueue;
 
     //TODO implement LinkedHashMap of threads handling interaction with other nodes

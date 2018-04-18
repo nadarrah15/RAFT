@@ -1,13 +1,10 @@
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.*;
 
 public class Node {
 
     private HashSet<String> ipSet; // Stores IP addresses of fellow nodes
     private int currentTerm; // Latest term server has seen (initialized to 0 on first boot)
-    private Integer votedFor; // Stores candidateId that received vote in current term (or null if none)
+    private String votedFor; // Stores candidateId that received vote in current term (or null if none)
     private ArrayList<LogEntry> log; // Stores log entries
     private int commitIndex; // Index of highest log entry known to be committed (initialized to 0)
     private int lastApplied; // Index of highest log entry applied to state machine (initialized to 0)
@@ -31,6 +28,8 @@ public class Node {
 
     public Node(HashSet<String> ipSet) {
         this.ipSet = ipSet; // Store IP addresses in .txt file
+        currentTerm = 0;
+        commitIndex = 0;
         state = State.FOLLOWER; // Begin life as Follower
         ClientHandler clientHandler = new ClientHandler(); // Start new thread for console (local client) input
         clientHandler.start();

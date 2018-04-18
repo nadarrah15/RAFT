@@ -1,9 +1,7 @@
 import com.example.raft.MessageProtos;
 
-import java.net.InetAddress;
 import java.util.*;
 import java.util.concurrent.*;
-import com.example.raft.MessageProtos;
 
 public class Node {
 
@@ -136,7 +134,7 @@ public class Node {
         MessageProtos.RequestVote requestVote = reqestVoteBuilder.build();
 
         //Send RequestVote() to all
-        send(reqestVote);
+        sendAll(requestVote);
 
         while (true) {
             /*
@@ -197,7 +195,7 @@ public class Node {
     }
 
     // sends message to all nodes
-    private void send(com.google.protobuf.GeneratedMessageV3 message){
+    private void sendAll(com.google.protobuf.GeneratedMessageV3 message){
         //TODO: write code to send the message to all the nodes
     }
 }

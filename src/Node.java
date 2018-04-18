@@ -59,6 +59,11 @@ public class Node {
 
     private State performFollower() {
         int timeout = rand.nextInt(150) + 150;
+        if (commitIndex > lastApplied) {
+            lastApplied++;
+            //TODO Implement applying to log
+            // apply(log.get(lastApplied))
+        }
         //TODO Implement
         // Loop through performFollower operations
         while (true) {
@@ -139,7 +144,7 @@ public class Node {
 
         // Loop through performLeader operations
         while (true) {
-            //Send heartbeat
+
             if (commitIndex > lastApplied) {
                 lastApplied++;
                 //TODO Implement applying to log
@@ -156,7 +161,7 @@ public class Node {
             } else if (RPC Response queue has something) {
                 respond appropriately
             } else {
-                check timer
+                send heartbeat
             }
             */
 

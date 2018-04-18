@@ -57,6 +57,8 @@ public class Node {
         //TODO Implement
         // Loop through performFollower operations
         while (true) {
+            //listen for heartbeat
+            //once the heartbeat stops, break loop
             break;
         }
         return State.CANDIDATE;
@@ -65,7 +67,30 @@ public class Node {
     private State performCandidate() {
         //TODO Implement
         // Loop through performCandidate operations
+
+        currentTerm++;      //increment term
+        int numVotes = 1;   //vote for self
+        //start election timer
+        //Send RequestVote() to all
+
         while (true) {
+            /*
+
+            if(We get a vote)
+                numVotes++;
+
+            if(numVotes >= majority)
+                return State.leader
+            else
+                keep waiting
+
+            if(heartBeat is heard)
+
+
+            if(election times out)
+                return performCandidate();
+
+            */
             break;
         }
         return State.LEADER;

@@ -1,3 +1,4 @@
+import java.net.InetAddress;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -67,11 +68,13 @@ public class Node {
 
 
              */
+
             try {
                 //Create Single-Thread for listener
                 Runnable r = () -> {
-                    //Listen for AppendEntry
-                    //Handle AppendEntry
+                    //Listen for AppendEntry/request vote
+                    //if AppendEntry, Handle
+                    //if requestVote, check term, log, and vote
                 };
 
                 Future<?> f = service.submit(r);

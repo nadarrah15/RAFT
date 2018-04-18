@@ -1,7 +1,10 @@
 import java.util.*;
+import java.util.concurrent.*;
 
 public class Node {
 
+    private Random rand = new Random();
+    ExecutorService service = Executors.newSingleThreadExecutor();
     private HashSet<String> ipSet; // Stores IP addresses of fellow nodes
     private int currentTerm; // Latest term server has seen (initialized to 0 on first boot)
     private String votedFor; // Stores candidateId that received vote in current term (or null if none)
@@ -54,11 +57,39 @@ public class Node {
     }
 
     private State performFollower() {
+        int timeout = rand.nextInt(150) + 150;
         //TODO Implement
         // Loop through performFollower operations
         while (true) {
-            //listen for heartbeat
+            /*
+                if(AppendEntry.term > currentTerm)
+                    currentTerm = AppendEntry.term;
+
+
+             */
+            try {
+                //Create Single-Thread for listener
+                Runnable r = () -> {
+                    //Listen for AppendEntry
+                    //Handle AppendEntry
+                };
+
+                Future<?> f = service.submit(r);
+                f.get(timeout, TimeUnit.MILLISECONDS);
+            } catch (TimeoutException e) {
+                return State.CANDIDATE;
+            } catch (InterruptedException e) {
+                System.out.println("Something Went Wrong In Execution");
+            } catch (ExecutionException e) {
+                System.out.println("Error in Entry Handling");
+            }
+            //start timer
+            //listen for AppendEntry
             //once the heartbeat stops, break loop
+
+            /*
+                if
+             */
             break;
         }
         return State.CANDIDATE;
@@ -105,6 +136,7 @@ public class Node {
 
         // Loop through performLeader operations
         while (true) {
+            //Send heartbeat
             if (commitIndex > lastApplied) {
                 lastApplied++;
                 //TODO Implement applying to log

@@ -1,3 +1,5 @@
+import com.example.raft.MessageProtos;
+
 /*
 Wraps generated Protobuf objects
  */

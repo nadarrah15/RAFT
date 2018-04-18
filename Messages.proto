@@ -1,4 +1,4 @@
-syntax = "proto3";
+syntax = "proto2";
 
 package raft;
 
@@ -7,30 +7,30 @@ option java_outer_classname = "MessageProtos";
 
 message AppendEntries
 {
-	required int32 term = 0;
-    required string leaderId = 1;
-    required int32 prevLogIndex = 2;
-    required int32 prevLogTerm = 3;
-    repeated string entries = 4;
-    required int32 leaderCommit = 5;
+	required int32 term = 1;
+    required string leaderId = 2;
+    required int32 prevLogIndex = 3;
+    required int32 prevLogTerm = 4;
+    repeated string entries = 5;
+    required int32 leaderCommit = 6;
 }
 
 message AppendEntriesResponse
 {
-    required int32 term = 0;
-    required bool success = 1;
+    required int32 term = 1;
+    required bool success = 2;
 }
 
 message RequestVote
 {
-    required int32 term = 0;
-    required string candidateId = 1;
-    required int32 lastLogIndex = 2;
-    required int32 lastLogTerm = 3;
+    required int32 term = 1;
+    required string candidateId = 2;
+    required int32 lastLogIndex = 3;
+    required int32 lastLogTerm = 4;
 }
 
 message RequestVoteResponse
 {
-    required int32 term = 0;
-    required bool voteGranted = 1;
+    required int32 term = 1;
+    required bool voteGranted = 2;
 }

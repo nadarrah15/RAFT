@@ -138,6 +138,7 @@ public class Node {
         while (true) {
 
             //start election timer
+            boolean timeout = false;
             Timer electionTimer = new Timer();
             electionTimer.schedule(new TimerTask(){
 
@@ -150,23 +151,23 @@ public class Node {
 
             //Receive either a heartbeat or a vote
             Message message;    //TODO recieve message
+            MessageProtos.RequestVoteResponse voteResponse;
+            MessageProtos.AppendEntries appendEntries;
             //TODO determine what the message type is
             electionTimer.cancel();
 
-
-            /*
-            if(We get a vote)
+            if(voteResponse.getVoteGranted()) {
                 numVotes++;
+                if(numVotes >= ipSet.size() / 2 + 1)
+                    return State.LEADER;
+            }
 
-            if(numVotes >= majority)
-                return State.leader
-
-            if(heartBeat is heard && heartBeat.currentTerm >= currentTerm)
+            if(appendEntries.getTerm() >= currentTerm){
                 return State.FOLLOWER;
+            }
 
-            if(election times out)
-                return performCandidate();
-            */
+            if(timeout)
+                return State.CANDIDATE;
 
             //TODO restart timer
             break;

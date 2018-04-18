@@ -8,7 +8,7 @@ public class Message {
     Type type;
     MessageProtos body;
 
-    enum Type {
+    private enum Type {
         AppendEntries, AppendEntriesResponse, RequestVote, RequestVoteResponse
     }
 

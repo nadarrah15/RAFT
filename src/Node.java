@@ -1,25 +1,20 @@
-import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.Queue;
+import java.util.*;
 
-public class main {
+public class Node {
 
-    private static HashSet<String> ipSet; // Stores IP addresses of fellow nodes
-    private static int currentTerm; // Latest term server has seen (initialized to 0 on first boot)
-    private static Integer votedFor; // Stores candidateId that received vote in current term (or null if none)
-    private static ArrayList<LogEntry> log; // Stores log entries
-    private static int commitIndex; // Index of highest log entry known to be committed (initialized to 0)
-    private static int lastApplied; // Index of highest log entry applied to state machine (initialized to 0)
+    private HashSet<String> ipSet; // Stores IP addresses of fellow nodes
+    private int currentTerm; // Latest term server has seen (initialized to 0 on first boot)
+    private String votedFor; // Stores candidateId that received vote in current term (or null if none)
+    private ArrayList<LogEntry> log; // Stores log entries
+    private int commitIndex; // Index of highest log entry known to be committed (initialized to 0)
+    private int lastApplied; // Index of highest log entry applied to state machine (initialized to 0)
+    private State state; // Defines follower, candidate, or leader state
 
     // TODO Implement Client input queue, RPC outbox queue, RPC inbox
     // TODO Create class which wraps/unwraps client input, RPC messages
     // TODO Replace generic types with said wrapper classes
-    private static Queue<Integer> clientInput;
-    private static Queue<Integer> rpcOutbox;
+    private Queue<Integer> clientInput;
+    private Queue<Integer> rpcOutbox;
     private static Queue<Integer> rpcInbox;
 
     //TODO implement LinkedHashMap of threads handling interaction with other nodes
@@ -31,12 +26,16 @@ public class main {
         FOLLOWER, CANDIDATE, LEADER
     }
 
-    public static void main(String[] args) throws FileNotFoundException, IOException {
-
-        ipSet = new HashSet<String>(Files.readAllLines(Paths.get(args[0]))); // Store IP addresses in .txt file
-        State state = State.FOLLOWER; // Begin life as Follower
+    public Node(HashSet<String> ipSet) {
+        this.ipSet = ipSet; // Store IP addresses in .txt file
+        currentTerm = 0;
+        commitIndex = 0;
+        state = State.FOLLOWER; // Begin life as Follower
         ClientHandler clientHandler = new ClientHandler(); // Start new thread for console (local client) input
         clientHandler.start();
+    }
+
+    public void run() {
 
         // Commence lifetime operations
         while (true) {
@@ -54,25 +53,50 @@ public class main {
         }
     }
 
-    private static State performFollower() {
+    private State performFollower() {
         //TODO Implement
         // Loop through performFollower operations
         while (true) {
+            //listen for heartbeat
+            //once the heartbeat stops, break loop
             break;
         }
         return State.CANDIDATE;
     }
 
-    private static State performCandidate() {
+    private State performCandidate() {
         //TODO Implement
         // Loop through performCandidate operations
+
+        currentTerm++;      //increment term
+        int numVotes = 1;   //vote for self
+        //start election timer
+        //Send RequestVote() to all
+
         while (true) {
+            /*
+
+            if(We get a vote)
+                numVotes++;
+
+            if(numVotes >= majority)
+                return State.leader
+            else
+                keep waiting
+
+            if(heartBeat is heard)
+
+
+            if(election times out)
+                return performCandidate();
+
+            */
             break;
         }
         return State.LEADER;
     }
 
-    private static State performLeader() {
+    private State performLeader() {
         // Initialize volatile state variables (reinitialized after election)
         LinkedHashMap<String, OtherServerState> otherStates = new LinkedHashMap<String, OtherServerState>();
         for (String ip : ipSet) {

@@ -7,7 +7,7 @@ public class Main {
 
     public static void main(String[] args) throws IOException {
 
-        Node node = new Node(new HashSet<String>(Files.readAllLines(Paths.get(args[0]))));
+        Node node = new Node(new HashSet<String>(Files.readAllLines(Paths.get(args[0]))));  //what is args[0]
         node.run();
     }
 }

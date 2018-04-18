@@ -1,6 +1,7 @@
 import java.net.InetAddress;
 import java.util.*;
 import java.util.concurrent.*;
+import com.example.raft.MessageProtos;
 
 public class Node {
 

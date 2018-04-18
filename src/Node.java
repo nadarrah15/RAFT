@@ -187,6 +187,7 @@ public class Node {
         return State.FOLLOWER;
     }
 
+    // sends message to all nodes
     private void send(com.google.protobuf.GeneratedMessageV3 message){
         //TODO: write code to send the message to all the nodes
     }

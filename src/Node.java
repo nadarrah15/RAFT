@@ -1,3 +1,5 @@
+import com.example.raft.MessageProtos;
+
 import java.net.InetAddress;
 import java.util.*;
 import java.util.concurrent.*;
@@ -7,6 +9,7 @@ public class Node {
     private Random rand = new Random();
     ExecutorService service = Executors.newSingleThreadExecutor();
     private HashSet<String> ipSet; // Stores IP addresses of fellow nodes
+    private String id;         // nodes ID
     private int currentTerm; // Latest term server has seen (initialized to 0 on first boot)
     private String votedFor; // Stores candidateId that received vote in current term (or null if none)
     private ArrayList<LogEntry> log; // Stores log entries
@@ -29,9 +32,11 @@ public class Node {
         this.ipSet = ipSet; // Store IP addresses in .txt file
         currentTerm = 0;
         commitIndex = 0;
+        lastApplied = 0;
         state = State.FOLLOWER; // Begin life as Follower
         ClientHandler clientHandler = new ClientHandler(this); // Start new thread for console (local client) input
         clientHandler.start();
+        //TODO: Find a way to randomly initialize unique ID
     }
 
     public void run() {
@@ -109,7 +114,20 @@ public class Node {
         currentTerm++;      //increment term
         int numVotes = 1;   //vote for self
         //start election timer
+
+        //Build the RequestVote RPC
+        MessageProtos.RequestVote.Builder reqestVoteBuilder = MessageProtos.RequestVote.newBuilder();
+        reqestVoteBuilder.setTerm(currentTerm)
+                .setCandidateId(id)
+                .setLastLogIndex(log.size() - 1);
+        if (log.size() > 0)
+            reqestVoteBuilder.setLastLogTerm(log.get(log.size() - 1).term);
+        else
+            reqestVoteBuilder.setLastLogTerm(0);
+        MessageProtos.RequestVote requestVote = reqestVoteBuilder.build();
+
         //Send RequestVote() to all
+        send(reqestVote);
 
         while (true) {
             /*
@@ -167,5 +185,9 @@ public class Node {
         }
 
         return State.FOLLOWER;
+    }
+
+    private void send(com.google.protobuf.GeneratedMessageV3 message){
+        //TODO: write code to send the message to all the nodes
     }
 }

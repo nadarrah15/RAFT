@@ -126,6 +126,26 @@ public class Node {
                         switch (message.getType()) {
                             case AppendEntriesResponse:
                                 MessageProtos.AppendEntries appendEntries = (MessageProtos.AppendEntries) message.getBody();
+                                MessageProtos.AppendEntriesResponse appendEntriesResponse;
+
+                                // Construct response
+                                if (appendEntries.getTerm() < currentTerm ||
+                                        log.get(appendEntries.getPrevLogIndex()).term != appendEntries.getPrevLogTerm()) {
+                                    // Prepare failure response
+                                    appendEntriesResponse = MessageProtos.AppendEntriesResponse.newBuilder().setSuccess(false).setTerm(currentTerm).build();
+                                } else {
+                                    // Prepare success response
+                                    appendEntriesResponse = MessageProtos.AppendEntriesResponse.newBuilder().setSuccess(true).setTerm(currentTerm).build();
+
+                                    if (appendEntries.getEntriesCount() < 1) {
+                                        // If entries[] is empty, acknowledge message as heartbeat
+                                        //Reset timer
+                                    } else {
+                                        // If existing entry conflicts with new one (same index, different terms), delete existing entry and all that follow
+                                        for (int i = 0; i < appendEntries.getEntriesCount(); i++)
+                                    }
+
+                                }
 
                                 break;
                             case RequestVoteResponse:
@@ -145,13 +165,14 @@ public class Node {
                                     votedFor = requestVote.getCandidateId();
                                 }
 
-                                // Call Net object to actually send message across sockets
+                                // Add response to taskQueue
+                                taskQueue.add(new QueueEntry(QueueEntry.Type.Message, new Message(false, Message.Type.RequestVoteResponse, requestVoteResponse)));
 
                                 break;
                             // Ignore AppendEntries, RequestVote tasks as follower
                         }
                     } else {
-                        // Send message to leader node
+                        // Call NetworkOutputHandler send message to leader node
                     }
             }
 

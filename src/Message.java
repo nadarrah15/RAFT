@@ -1,4 +1,5 @@
 import com.example.raft.MessageProtos;
+import com.google.protobuf.GeneratedMessageV3;
 
 import java.io.Serializable;
 
@@ -10,7 +11,7 @@ public class Message implements Serializable{
     Type type;
     MessageProtos body;
 
-    protected enum Type {
+    private enum Type {
         AppendEntries, AppendEntriesResponse, RequestVote, RequestVoteResponse
     }
 

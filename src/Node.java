@@ -1,4 +1,5 @@
 import com.example.raft.MessageProtos;
+import com.google.protobuf.GeneratedMessageV3;
 
 import java.io.BufferedOutputStream;
 import java.io.IOException;
@@ -10,7 +11,7 @@ import java.util.concurrent.*;
 public class Node {
 
     private Random rand = new Random();
-    ExecutorService service = Executors.newSingleThreadExecutor();
+    ExecutorService service = Executors.newSingleThreadExecutor();  //TODO: Reply to 'What is this?'
     private HashSet<String> ipSet; // Stores IP addresses of fellow nodes
     private String id;         // nodes ID
     private int currentTerm; // Latest term server has seen (initialized to 0 on first boot)
@@ -19,7 +20,7 @@ public class Node {
     private int commitIndex; // Index of highest log entry known to be committed (initialized to 0)
     private int lastApplied; // Index of highest log entry applied to state machine (initialized to 0)
     private State state; // Defines follower, candidate, or leader state
-    private Queue<QueueEntry> taskQueue;    //What is this?
+    private Queue<QueueEntry> taskQueue;    //TODO: Reply to 'What is this?'
 
     //TODO implement LinkedHashMap of threads handling interaction with other nodes
     // A: Dedicate one thread to receiving all messages, one per node for sending messages?
@@ -119,8 +120,6 @@ public class Node {
     }
 
     private State performCandidate() {
-        //TODO Implement
-        // Loop through performCandidate operations
 
         currentTerm++;      //increment term
         int numVotes = 1;   //vote for self
@@ -138,32 +137,39 @@ public class Node {
 
         //Send RequestVote() to all
         sendAll(requestVote);
+
+        //start timer
         long start = System.nanoTime();
 
-        while (true) {
+        //instantiate incoming message
+        Message message = null;
 
+        while (message == null) {
+
+            //wait for incoming message until timeout. Once timeout occurs, restart candidacy
             long end = System.nanoTime();
-            if(end - start == 500)
+            if (end - start == 500)
                 break;
 
             //Receive either a heartbeat or a vote
-            Message message;    //TODO recieve message
-            MessageProtos.RequestVoteResponse voteResponse;
-            MessageProtos.AppendEntries appendEntries;
-            //TODO determine what the message type is
+            if(taskQueue.size() != 0)
+                message = (Message) taskQueue.poll().getBody();     //TODO: resolve issues
+        }
 
-            if (voteResponse.getVoteGranted()) {
-                numVotes++;
-                if (numVotes >= ipSet.size() / 2 + 1)
-                    return State.LEADER;
-            }
 
-            if (appendEntries.getTerm() >= currentTerm) {
-                return State.FOLLOWER;
-            }
-
-            //TODO restart timer
-            break;
+        switch (message.getType()) {
+            case 0 :
+                //if (message.getTerm >= currentTerm){
+                    taskQueue.add(new QueueEntry(1, message.body));     //TODO: resolve issues
+                    return State.FOLLOWER;
+                //}
+                //break;
+            case 3 :
+                //if(message.getVoteGranted()){
+                    numVotes++;
+                    if(numVotes > ipSet.size() / 2)
+                        return State.LEADER;
+                    break;
         }
 
         return State.CANDIDATE;
@@ -208,15 +214,13 @@ public class Node {
     }
 
     // sends message to all nodes
-    private void sendAll(com.google.protobuf.GeneratedMessageV3 message)throws IOException{
+    private void sendAll(com.google.protobuf.GeneratedMessageV3 message){
         //TODO: write code to send the message to all the nodes
-        OutputStream outputStream = new OutputStream() {
-            @Override
-            public void write(int b) throws IOException {
-
-            }
-        };
     }
 
-
+    //receives message from other nodes
+    private Message getMessage(){
+        //TODO: implement
+        return null;
+    }
 }

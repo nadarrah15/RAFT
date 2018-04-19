@@ -75,10 +75,11 @@ public class Node {
         //TODO Implement
         // Loop through performFollower operations
         while (true) {
+
+            /*
             try {
                 //Create Single-Thread for listener
                 Runnable r = () -> {
-                    /*
                         Message message = incoming message;
                         switch(message.getType()){
                             case AppendEntries:
@@ -100,8 +101,6 @@ public class Node {
                                     return new RequestVoteResponse(false);
                                 if((votedFor == null || votedFor == candidateId) && log is up to date)
                                     return new RequestVoteResponse(true);
-
-                     */
                 };
 
                 Future<?> f = service.submit(r);
@@ -115,7 +114,57 @@ public class Node {
             }
 
             break;
+           */
+
+            // Check taskQueue
+            QueueEntry entry = taskQueue.remove();
+            // Check entry type
+            switch (entry.getType()) {
+                case Input:
+                    // Check type of client input (command, crash, reboot, etc.)
+                    // Redirect client commands to leader
+                    break;
+
+                case Message:
+                    Message message = (Message) entry.getBody();
+                    // Check if message is ingoing or outgoing
+                    if (message.isIncoming()) {
+                        // Process message
+                        switch (message.getType()) {
+                            case AppendEntriesResponse:
+                                MessageProtos.AppendEntries appendEntries = (MessageProtos.AppendEntries) message.getBody();
+
+                                break;
+                            case RequestVoteResponse:
+                                MessageProtos.RequestVote requestVote = (MessageProtos.RequestVote) message.getBody();
+                                MessageProtos.RequestVoteResponse requestVoteResponse;
+
+                                // Construct response
+                                if (requestVote.getTerm() >= currentTerm &&
+                                        votedFor == null &&
+                                        requestVote.getLastLogIndex() >= log.size() - 1 &&
+                                        requestVote.getLastLogTerm() >= log.get(log.size() - 1).term) {
+                                    // Prepare to grant vote
+                                    requestVoteResponse = MessageProtos.RequestVoteResponse.newBuilder().setVoteGranted(true).setTerm(currentTerm).build();
+                                } else {
+                                    // Prepare to deny vote
+                                    requestVoteResponse = MessageProtos.RequestVoteResponse.newBuilder().setVoteGranted(false).setTerm(currentTerm).build();
+                                    votedFor = requestVote.getCandidateId();
+                                }
+
+                                // Call Net object to actually send message across sockets
+
+                                break;
+                            // Ignore AppendEntries, RequestVote tasks as follower
+                        }
+                    } else {
+                        // Send message to leader node
+                    }
+            }
+
+            break;
         }
+
         return State.CANDIDATE;
     }
 

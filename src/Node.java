@@ -59,6 +59,7 @@ public class Node {
     }
 
     private State performFollower() {
+        boolean voted = false; // Prevents follower from voting twice in single term
         int timeout = rand.nextInt(150) + 150;
         if (commitIndex > lastApplied) {
             lastApplied++;
@@ -113,28 +114,29 @@ public class Node {
             QueueEntry entry = taskQueue.remove();
             // Check entry type
             switch (entry.getType()) {
-                case 0: // Local input
+                case Input:
                     // Check type of client input (command, crash, reboot, etc.)
                     // Redirect client commands to leader
                     break;
-
-                case 1: // Message
+                case Message:
                     Message message = (Message) entry.getBody();
                     // Check if message is ingoing or outgoing
                     if (message.isIncoming()) {
                         // Process message
-                        switch(message.getType()) {
-                            case 1: // AppendEntriesResponse
-                            case 3: // RequestVoteResponse
-                            default:
-                                // Ignore AppendEntries, RequestVote tasks as follower
+                        switch (message.getType()) {
+                            case AppendEntriesResponse:
+                                break;
+                            case RequestVoteResponse:
+                                // If voting set voted to true
+                                break;
+                            // Ignore AppendEntries, RequestVote tasks as follower
                         }
                     } else {
                         // Send message to leader node
                     }
-
-                    break;
             }
+
+            break;
         }
 
         return State.CANDIDATE;

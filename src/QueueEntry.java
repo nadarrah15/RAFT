@@ -7,17 +7,17 @@ public class QueueEntry {
     Type type;
     Object body;
 
-    private enum Type {
+    public enum Type {
         Input, Message
     }
 
-    public QueueEntry(int index, Object body) {
-        type = Type.values()[index];
+    public QueueEntry(Type type, Object body) {
+        this.type = type;
         this.body = body;
     }
 
-    public int getType() {
-        return type.ordinal();
+    public Type getType() {
+        return type;
     }
 
     public Object getBody() {

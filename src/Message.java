@@ -9,13 +9,13 @@ public class Message {
     private Type type; // Type of underlying RPC
     private MessageProtos body;
 
-    private enum Type {
+    public enum Type {
         AppendEntries, AppendEntriesResponse, RequestVote, RequestVoteResponse
     }
 
-    public Message(boolean isIncoming, int index, MessageProtos body) {
+    public Message(boolean isIncoming, Type type, MessageProtos body) {
         this.isIncoming = isIncoming;
-        type = Type.values()[index];
+        this.type = type;
         this.body = body;
     }
 
@@ -23,8 +23,8 @@ public class Message {
         return isIncoming;
     }
 
-    public int getType() {
-        return type.ordinal();
+    public Type getType() {
+        return type;
     }
 
     public MessageProtos getBody() {

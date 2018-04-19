@@ -1,8 +1,13 @@
+
+import com.example.raft.MessageProtos;
 import com.google.protobuf.GeneratedMessageV3;
+
+import java.io.Serializable;
+
 /*
 Wraps generated Protobuf objects
  */
-public class Message {
+public class Message implements Serializable{
 
     private boolean isIncoming; // True if incoming; false if outgoing
     private Type type; // Type of underlying RPC

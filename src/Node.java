@@ -59,7 +59,6 @@ public class Node {
     }
 
     private State performFollower() {
-        boolean voted = false; // Prevents follower from voting twice in single term
         int timeout = rand.nextInt(150) + 150;
         if (commitIndex > lastApplied) {
             lastApplied++;
@@ -117,7 +116,6 @@ public class Node {
                 case Input:
                     // Check type of client input (command, crash, reboot, etc.)
                     // Redirect client commands to leader
-
                     break;
 
                 case Message:
@@ -128,9 +126,27 @@ public class Node {
                         switch (message.getType()) {
                             case AppendEntriesResponse:
                                 MessageProtos.AppendEntries appendEntries = (MessageProtos.AppendEntries) message.getBody();
+
                                 break;
                             case RequestVoteResponse:
-                                // If voting set voted to true
+                                MessageProtos.RequestVote requestVote = (MessageProtos.RequestVote) message.getBody();
+                                MessageProtos.RequestVoteResponse requestVoteResponse;
+
+                                // Construct response
+                                if (requestVote.getTerm() >= currentTerm &&
+                                        votedFor == null &&
+                                        requestVote.getLastLogIndex() >= log.size() - 1 &&
+                                        requestVote.getLastLogTerm() >= log.get(log.size() - 1).term) {
+                                    // Prepare to grant vote
+                                    requestVoteResponse = MessageProtos.RequestVoteResponse.newBuilder().setVoteGranted(true).setTerm(currentTerm).build();
+                                } else {
+                                    // Prepare to deny vote
+                                    requestVoteResponse = MessageProtos.RequestVoteResponse.newBuilder().setVoteGranted(false).setTerm(currentTerm).build();
+                                    votedFor = requestVote.getCandidateId();
+                                }
+
+                                // Call Net object to actually send message across sockets
+
                                 break;
                             // Ignore AppendEntries, RequestVote tasks as follower
                         }

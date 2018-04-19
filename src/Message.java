@@ -1,5 +1,4 @@
-import com.example.raft.MessageProtos;
-
+import com.google.protobuf.GeneratedMessageV3;
 /*
 Wraps generated Protobuf objects
  */
@@ -7,13 +6,13 @@ public class Message {
 
     private boolean isIncoming; // True if incoming; false if outgoing
     private Type type; // Type of underlying RPC
-    private MessageProtos body;
+    private GeneratedMessageV3 body;
 
     public enum Type {
         AppendEntries, AppendEntriesResponse, RequestVote, RequestVoteResponse
     }
 
-    public Message(boolean isIncoming, Type type, MessageProtos body) {
+    public Message(boolean isIncoming, Type type, GeneratedMessageV3 body) {
         this.isIncoming = isIncoming;
         this.type = type;
         this.body = body;
@@ -27,7 +26,7 @@ public class Message {
         return type;
     }
 
-    public MessageProtos getBody() {
+    public GeneratedMessageV3 getBody() {
         return body;
     }
 }

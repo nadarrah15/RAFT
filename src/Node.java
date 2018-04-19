@@ -117,7 +117,9 @@ public class Node {
                 case Input:
                     // Check type of client input (command, crash, reboot, etc.)
                     // Redirect client commands to leader
+
                     break;
+
                 case Message:
                     Message message = (Message) entry.getBody();
                     // Check if message is ingoing or outgoing
@@ -125,6 +127,7 @@ public class Node {
                         // Process message
                         switch (message.getType()) {
                             case AppendEntriesResponse:
+                                MessageProtos.AppendEntries appendEntries = (MessageProtos.AppendEntries) message.getBody();
                                 break;
                             case RequestVoteResponse:
                                 // If voting set voted to true

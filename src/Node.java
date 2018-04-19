@@ -1,6 +1,7 @@
 import java.net.InetAddress;
 import java.util.*;
 import java.util.concurrent.*;
+
 import com.example.raft.MessageProtos;
 
 public class Node {
@@ -67,10 +68,11 @@ public class Node {
         //TODO Implement
         // Loop through performFollower operations
         while (true) {
+
+            /*
             try {
                 //Create Single-Thread for listener
                 Runnable r = () -> {
-                    /*
                         Message message = incoming message;
                         switch(message.getType()){
                             case AppendEntries:
@@ -92,8 +94,6 @@ public class Node {
                                     return new RequestVoteResponse(false);
                                 if((votedFor == null || votedFor == candidateId) && log is up to date)
                                     return new RequestVoteResponse(true);
-
-                     */
                 };
 
                 Future<?> f = service.submit(r);
@@ -107,7 +107,36 @@ public class Node {
             }
 
             break;
+           */
+
+            // Check taskQueue
+            QueueEntry entry = taskQueue.remove();
+            // Check entry type
+            switch (entry.getType()) {
+                case 0: // Local input
+                    // Check type of client input (command, crash, reboot, etc.)
+                    // Redirect client commands to leader
+                    break;
+
+                case 1: // Message
+                    Message message = (Message) entry.getBody();
+                    // Check if message is ingoing or outgoing
+                    if (message.isIncoming()) {
+                        // Process message
+                        switch(message.getType()) {
+                            case 1: // AppendEntriesResponse
+                            case 3: // RequestVoteResponse
+                            default:
+                                // Ignore AppendEntries, RequestVote tasks as follower
+                        }
+                    } else {
+                        // Send message to leader node
+                    }
+
+                    break;
+            }
         }
+
         return State.CANDIDATE;
     }
 

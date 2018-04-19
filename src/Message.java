@@ -5,16 +5,22 @@ Wraps generated Protobuf objects
  */
 public class Message {
 
-    Type type;
-    MessageProtos body;
+    private boolean isIncoming; // True if incoming; false if outgoing
+    private Type type; // Type of underlying RPC
+    private MessageProtos body;
 
     private enum Type {
         AppendEntries, AppendEntriesResponse, RequestVote, RequestVoteResponse
     }
 
-    public Message(int index, MessageProtos body) {
+    public Message(boolean isIncoming, int index, MessageProtos body) {
+        this.isIncoming = isIncoming;
         type = Type.values()[index];
         this.body = body;
+    }
+
+    public boolean isIncoming() {
+        return isIncoming;
     }
 
     public int getType() {

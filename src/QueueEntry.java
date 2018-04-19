@@ -2,16 +2,16 @@
 /*
 Wraps either Messages or client Inputs
  */
-public class QueueEntry<E> {
+public class QueueEntry {
 
     Type type;
-    E body;
+    Object body;
 
     private enum Type {
-        Input, MessageIn, MessageOut
+        Input, Message
     }
 
-    public QueueEntry(int index, E body) {
+    public QueueEntry(int index, Object body) {
         type = Type.values()[index];
         this.body = body;
     }
@@ -20,7 +20,7 @@ public class QueueEntry<E> {
         return type.ordinal();
     }
 
-    public E getBody() {
+    public Object getBody() {
         return body;
     }
 }

@@ -1,14 +1,16 @@
 import com.example.raft.MessageProtos;
 
+import java.io.Serializable;
+
 /*
 Wraps generated Protobuf objects
  */
-public class Message {
+public class Message implements Serializable{
 
     Type type;
     MessageProtos body;
 
-    private enum Type {
+    protected enum Type {
         AppendEntries, AppendEntriesResponse, RequestVote, RequestVoteResponse
     }
 

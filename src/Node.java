@@ -1,5 +1,9 @@
 import com.example.raft.MessageProtos;
 
+import java.io.BufferedOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -134,49 +138,37 @@ public class Node {
 
         //Send RequestVote() to all
         sendAll(requestVote);
+        long start = System.nanoTime();
 
         while (true) {
 
-            //start election timer
-            boolean timeout = false;
-            Timer electionTimer = new Timer();
-            electionTimer.schedule(new TimerTask(){
-
-                @Override
-                public void run(){
-                    //timeout action
-                }
-            }, 500); //timer currently set to 500 ms TODO decide how long until timeout
-
+            long end = System.nanoTime();
+            if(end - start == 500)
+                break;
 
             //Receive either a heartbeat or a vote
             Message message;    //TODO recieve message
             MessageProtos.RequestVoteResponse voteResponse;
             MessageProtos.AppendEntries appendEntries;
             //TODO determine what the message type is
-            electionTimer.cancel();
 
-            if(voteResponse.getVoteGranted()) {
+            if (voteResponse.getVoteGranted()) {
                 numVotes++;
-                if(numVotes >= ipSet.size() / 2 + 1)
+                if (numVotes >= ipSet.size() / 2 + 1)
                     return State.LEADER;
             }
 
-            if(appendEntries.getTerm() >= currentTerm){
+            if (appendEntries.getTerm() >= currentTerm) {
                 return State.FOLLOWER;
             }
-
-            if(timeout)
-                return State.CANDIDATE;
 
             //TODO restart timer
             break;
         }
 
-
-
-        return State.LEADER;
+        return State.CANDIDATE;
     }
+
 
     private State performLeader() {
         // Initialize volatile state variables (reinitialized after election)
@@ -216,8 +208,14 @@ public class Node {
     }
 
     // sends message to all nodes
-    private void sendAll(com.google.protobuf.GeneratedMessageV3 message){
+    private void sendAll(com.google.protobuf.GeneratedMessageV3 message)throws IOException{
         //TODO: write code to send the message to all the nodes
+        OutputStream outputStream = new OutputStream() {
+            @Override
+            public void write(int b) throws IOException {
+
+            }
+        };
     }
 
 

@@ -234,7 +234,7 @@ public class Node {
         sendAll(requestVote);
 
         //start timer
-        long start = System.nanoTime();
+        long start = System.currentTimeMillis();
 
         while (true) {
 
@@ -268,7 +268,7 @@ public class Node {
                         MessageProtos.RequestVoteResponse response = (MessageProtos.RequestVoteResponse) message.getBody();
                         if(response.getVoteGranted()) {
                             numVotes++;
-                            start = System.nanoTime();
+                            start = System.currentTimeMillis();
                             //check if we have majority
                             if (numVotes > ipSet.size() / 2)
                                 return State.LEADER;

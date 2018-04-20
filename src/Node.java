@@ -137,6 +137,7 @@ public class Node {
 
                                 // Construct response
                                 if (appendEntries.getTerm() < currentTerm ||
+                                        log.size() <= appendEntries.getPrevLogTerm() ||
                                         log.get(appendEntries.getPrevLogIndex()).term != appendEntries.getPrevLogTerm()) {
                                     // Prepare failure response
                                     appendEntriesResponse = MessageProtos.AppendEntriesResponse.newBuilder().setSuccess(false).setTerm(currentTerm).build();
@@ -149,7 +150,18 @@ public class Node {
                                         //Reset timer
                                     } else {
                                         // If existing entry conflicts with new one (same index, different terms), delete existing entry and all that follow
-                                        for (int i = 0; i < appendEntries.getEntriesCount(); i++)
+                                        for (int i = appendEntries.getPrevLogIndex(); i < log.size(); ) {
+                                            if (log.get(i).term != appendEntries.getTerm()) {
+                                                log.remove(i);
+                                                continue;
+                                            }
+                                            i++;
+                                        }
+
+                                        // Add new entries to log
+                                        for (int i = appendEntries.getPrevLogIndex(); i < appendEntries.getPrevLogIndex() + appendEntries.getEntriesCount(); i++) {
+
+                                        }
                                     }
 
                                 }
@@ -222,24 +234,24 @@ public class Node {
                 break;
 
             //Receive either a heartbeat or a vote
-            if(taskQueue.size() != 0)
+            if (taskQueue.size() != 0)
                 message = (Message) taskQueue.poll().getBody();     //TODO: resolve issues
         }
 
 
         switch (message.getType()) {
-            case 0 :
+            case AppendEntries:
                 //if (message.getTerm >= currentTerm){
-                    taskQueue.add(new QueueEntry(1, message.body));     //TODO: resolve issues
-                    return State.FOLLOWER;
-                //}
-                //break;
-            case 3 :
+                taskQueue.add(new QueueEntry(QueueEntry.Type.Message, message.getBody()));     //TODO: resolve issues
+                return State.FOLLOWER;
+            //}
+            //break;
+            case RequestVoteResponse:
                 //if(message.getVoteGranted()){
-                    numVotes++;
-                    if(numVotes > ipSet.size() / 2)
-                        return State.LEADER;
-                    break;
+                numVotes++;
+                if (numVotes > ipSet.size() / 2)
+                    return State.LEADER;
+                break;
         }
 
         return State.CANDIDATE;
@@ -284,12 +296,12 @@ public class Node {
     }
 
     // sends message to all nodes
-    private void sendAll(com.google.protobuf.GeneratedMessageV3 message){
+    private void sendAll(com.google.protobuf.GeneratedMessageV3 message) {
         //TODO: write code to send the message to all the nodes
     }
 
     //receives message from other nodes
-    private Message getMessage(){
+    private Message getMessage() {
         //TODO: implement
         return null;
     }

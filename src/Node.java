@@ -260,7 +260,7 @@ public class Node {
                         MessageProtos.AppendEntries appendMessage = (MessageProtos.AppendEntries) message.getBody();
                         //check to see if this is the real leader
                         if (appendMessage.getTerm() >= currentTerm){
-                            taskQueue.add(new QueueEntry(QueueEntry.Type.Message, message.getBody()));
+                            //TODO what if the message is not empty
                             return State.FOLLOWER;
                         }
                         break;

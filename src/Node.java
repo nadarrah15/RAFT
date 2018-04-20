@@ -236,6 +236,7 @@ public class Node {
         //start timer
         long start = System.currentTimeMillis();
 
+        //loop the election
         while (true) {
 
             //wait for incoming message until timeout. Once timeout occurs, restart candidacy

@@ -184,14 +184,13 @@ public class Node {
                                     votedFor = requestVote.getCandidateId();
                                 }
 
-                                // Add response to taskQueue
-                                taskQueue.add(new QueueEntry(QueueEntry.Type.Message, new Message(false, Message.Type.RequestVoteResponse, requestVoteResponse)));
+                                // Call Net object to actually send message across sockets
 
                                 break;
                             // Ignore AppendEntries, RequestVote tasks as follower
                         }
                     } else {
-                        // Call NetworkOutputHandler send message to leader node
+                        // Send message to leader node
                     }
             }
 

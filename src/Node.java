@@ -332,17 +332,17 @@ public class Node {
         }
     }
 
-            // sends message to all nodes
-            private void sendAll (com.google.protobuf.GeneratedMessageV3 message){
-                //TODO: write code to send the message to all the nodes
-            }
+    // sends message to all nodes
+    private void sendAll (com.google.protobuf.GeneratedMessageV3 message){
+        //TODO: write code to send the message to all the nodes
+    }
 
-            //receives message from other nodes
-            private Message getMessage () {
-                //TODO: implement
-                return null;
-            }
-            private void sendToLeader (Message message){
-                //TODO: Write
-            }
-        }
+    //receives message from other nodes
+    private Message getMessage () {
+        //TODO: implement
+        return null;
+    }
+    private void sendToLeader (Message message){
+        //TODO: Write
+    }
+}

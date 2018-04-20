@@ -9,4 +9,11 @@ public class Net {
             //2a. launch a thread to receive the message and send it to the node queue
         }
     }
+
+    public void send(String peer, int typ, byte[] data){
+        //1. Launches a thread to
+        //  a. open a socket to the peer
+        //  b. send the type, data.length, data
+        //  c. close the socket
+    }
 }

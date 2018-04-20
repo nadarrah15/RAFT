@@ -294,8 +294,6 @@ public class Node {
                 // apply(log.get(lastApplied))
             }
 
-            //TODO Check if in-queue and out-queue are empty
-
             if (!taskQueue.isEmpty()) {
                 QueueEntry entry = taskQueue.remove();
                 // Check entry type

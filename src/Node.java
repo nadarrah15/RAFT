@@ -220,9 +220,10 @@ public class Node {
 
         //Build the RequestVote RPC
         MessageProtos.RequestVote.Builder requestVoteBuilder = MessageProtos.RequestVote.newBuilder();
-        requestVoteBuilder.setTerm(currentTerm)
-                .setCandidateId(id)
-                .setLastLogIndex(log.size() - 1);
+        requestVoteBuilder.setTerm(currentTerm)     //set RequestVote term
+                .setCandidateId(id)                 //set RequestVote id
+                .setLastLogIndex(log.size() - 1);   //set RequestVote lastLogIndex
+        //set RequestVote lastLogTerm
         if (log.size() > 0)
             requestVoteBuilder.setLastLogTerm(log.get(log.size() - 1).term);
         else
@@ -235,38 +236,44 @@ public class Node {
         //start timer
         long start = System.nanoTime();
 
-        //instantiate incoming message
-        Message message = null;
-
-        while (message == null) {
+        while (true) {
 
             //wait for incoming message until timeout. Once timeout occurs, restart candidacy
             long end = System.nanoTime();
-            if (end - start == 500)
-                break;
+            if (end - start == 500)     //
+                return State.CANDIDATE;
 
             //Receive either a heartbeat or a vote
-            if (taskQueue.size() != 0)
-                message = (Message) taskQueue.poll().getBody();     //TODO: resolve issues
+
+            Message message = (Message) taskQueue.poll().getBody();
+
+            /*
+            if(!message.isIncoming())
+                This isn't possible, change_my_mind_meme.jpg
+             */
+
+            //determine message type
+            switch (message.getType()) {
+                case AppendEntries:
+                    MessageProtos.AppendEntries appendMessage = (MessageProtos.AppendEntries) message.getBody();
+                    //check to see if this is the real leader
+                    if (appendMessage.getTerm() >= currentTerm){
+                        taskQueue.add(new QueueEntry(QueueEntry.Type.Message, message.getBody()));
+                        return State.FOLLOWER;
+                    }
+                    break;
+                case RequestVoteResponse:
+                    MessageProtos.RequestVoteResponse response = (MessageProtos.RequestVoteResponse) message.getBody();
+                    if(response.getVoteGranted()) {
+                        numVotes++;
+                        //check if we have majority
+                        if (numVotes > ipSet.size() / 2)
+                            return State.LEADER;
+                    }
+                    break;
+            }
+
         }
-
-
-        switch (message.getType()) {
-            case AppendEntries:
-                //if (message.getTerm >= currentTerm){
-                taskQueue.add(new QueueEntry(QueueEntry.Type.Message, message.getBody()));     //TODO: resolve issues
-                return State.FOLLOWER;
-            //}
-            //break;
-            case RequestVoteResponse:
-                //if(message.getVoteGranted()){
-                numVotes++;
-                if (numVotes > ipSet.size() / 2)
-                    return State.LEADER;
-                break;
-        }
-
-        return State.CANDIDATE;
     }
 
 

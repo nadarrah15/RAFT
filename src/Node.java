@@ -240,7 +240,7 @@ public class Node {
 
             //wait for incoming message until timeout. Once timeout occurs, restart candidacy
             long end = System.nanoTime();
-            if (end - start == 500)     //
+            if (end - start == 500)
                 return State.CANDIDATE;
 
             //Receive either a heartbeat or a vote
@@ -268,6 +268,7 @@ public class Node {
                         MessageProtos.RequestVoteResponse response = (MessageProtos.RequestVoteResponse) message.getBody();
                         if(response.getVoteGranted()) {
                             numVotes++;
+                            start = System.nanoTime();
                             //check if we have majority
                             if (numVotes > ipSet.size() / 2)
                                 return State.LEADER;

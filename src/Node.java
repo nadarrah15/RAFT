@@ -143,10 +143,16 @@ public class Node {
                                                 log.size() <= appendEntries.getPrevLogTerm() ||
                                                 log.get(appendEntries.getPrevLogIndex()).term != appendEntries.getPrevLogTerm()) {
                                             // Prepare failure response
-                                            appendEntriesResponse = MessageProtos.AppendEntriesResponse.newBuilder().setSuccess(false).setTerm(currentTerm).build();
+                                            appendEntriesResponse = MessageProtos.AppendEntriesResponse.newBuilder()
+                                                    .setSuccess(false)
+                                                    .setTerm(currentTerm)
+                                                    .build();
                                         } else {
                                             // Prepare success response
-                                            appendEntriesResponse = MessageProtos.AppendEntriesResponse.newBuilder().setSuccess(true).setTerm(currentTerm).build();
+                                            appendEntriesResponse = MessageProtos.AppendEntriesResponse.newBuilder()
+                                                    .setSuccess(true)
+                                                    .setTerm(currentTerm)
+                                                    .build();
 
                                             if (appendEntries.getEntriesCount() < 1) {
                                                 // If entries[] is empty, acknowledge message as heartbeat

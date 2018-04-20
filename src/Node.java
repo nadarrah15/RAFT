@@ -134,7 +134,7 @@ public class Node {
                             if (message.isIncoming()) {
                                 // Process message
                                 switch (message.getType()) {
-                                    case AppendEntriesResponse:
+                                    case AppendEntries:
                                         MessageProtos.AppendEntries appendEntries = (MessageProtos.AppendEntries) message.getBody();
                                         MessageProtos.AppendEntriesResponse appendEntriesResponse;
 
@@ -170,7 +170,7 @@ public class Node {
                                         }
 
                                         break;
-                                    case RequestVoteResponse:
+                                    case RequestVote:
                                         MessageProtos.RequestVote requestVote = (MessageProtos.RequestVote) message.getBody();
                                         MessageProtos.RequestVoteResponse requestVoteResponse;
 

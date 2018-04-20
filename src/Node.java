@@ -72,7 +72,7 @@ public class Node {
             //TODO Implement applying to log
             // apply(log.get(lastApplied))
         }
-        //TODO Implement
+        //TODO Implement timer
         // Loop through performFollower operations
         while (true) {
 
@@ -182,6 +182,7 @@ public class Node {
                                 }
 
                                 // Call Net object to actually send message across sockets
+                                requestVoteResponse.toByteArray();
 
                                 break;
                             // Ignore AppendEntries, RequestVote tasks as follower

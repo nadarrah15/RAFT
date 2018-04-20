@@ -149,9 +149,11 @@ public class Node {
                                         // If entries[] is empty, acknowledge message as heartbeat
                                         //Reset timer
                                     } else {
-                                        // If existing entry conflicts with new one (same index, different terms), delete existing entry and all that follow
-                                        for (int i = appendEntries.getPrevLogIndex(); i < log.size(); ) {
-                                            if (log.get(i).term != appendEntries.getTerm()) {
+                                        // If existing entry conflicts with new one (same index, different terms), delete existing entry and all that
+                                        //TODO This code seems problematic to me
+                                        int size = log.size() - appendEntries.getPrevLogIndex() + 1;
+                                        for (int i = 0; i < size; ) {
+                                            if (log.get(i).term != appendEntries.getEntries(i).getTerm()) {
                                                 log.remove(i);
                                                 continue;
                                             }

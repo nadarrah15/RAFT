@@ -61,8 +61,8 @@ public class Node {
         }
     }
 
-    public void addToQueue(QueueEntry entry) {
-        taskQueue.add(entry);
+    public void addToQueue(QueueEntry task) {
+        taskQueue.add(task);
     }
 
     private State performFollower() {
@@ -117,16 +117,16 @@ public class Node {
            */
 
             // Check taskQueue
-            QueueEntry entry = taskQueue.remove();
+            QueueEntry task = taskQueue.remove();
             // Check entry type
-            switch (entry.getType()) {
+            switch (task.getType()) {
                 case Input:
                     // Check type of client input (command, crash, reboot, etc.)
                     // Redirect client commands to leader
                     break;
 
                 case Message:
-                    Message message = (Message) entry.getBody();
+                    Message message = (Message) task.getBody();
                     // Check if message is ingoing or outgoing
                     if (message.isIncoming()) {
                         // Process message
@@ -149,20 +149,15 @@ public class Node {
                                         // If entries[] is empty, acknowledge message as heartbeat
                                         //Reset timer
                                     } else {
-                                        // If existing entry conflicts with new one (same index, different terms), delete existing entry and all that
-                                        //TODO This code seems problematic to me
-                                        int size = log.size() - appendEntries.getPrevLogIndex() + 1;
-                                        for (int i = 0; i < size; ) {
-                                            if (log.get(i).term != appendEntries.getEntries(i).getTerm()) {
-                                                log.remove(i);
-                                                continue;
-                                            }
-                                            i++;
+                                        // If existing entry conflicts with new one (same index, different terms), delete existing entry and all that follow
+                                        for (int start = appendEntries.getPrevLogIndex() + 1; log.size() > start; ) {
+                                            log.remove(start);
                                         }
 
-                                        // Add new entries to log
-                                        for (int i = appendEntries.getPrevLogIndex(); i < appendEntries.getPrevLogIndex() + appendEntries.getEntriesCount(); i++) {
-
+                                        // Append new entries to log
+                                        for (int i = 0; i < appendEntries.getEntriesCount(); i++) {
+                                            MessageProtos.AppendEntries.Entry entry = appendEntries.getEntries(i);
+                                            log.add(new LogEntry(entry.getTerm(), entry.getMessage()));
                                         }
                                     }
 

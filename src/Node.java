@@ -244,7 +244,6 @@ public class Node {
                 return State.CANDIDATE;
 
             //Receive either a heartbeat or a vote
-
             QueueEntry entry = taskQueue.poll();
 
             /*

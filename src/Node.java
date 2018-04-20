@@ -245,7 +245,7 @@ public class Node {
 
             //Receive either a heartbeat or a vote
 
-            Message message = (Message) taskQueue.poll().getBody();
+            QueueEntry entry = taskQueue.poll();
 
             /*
             if(!message.isIncoming())
@@ -253,24 +253,27 @@ public class Node {
              */
 
             //determine message type
-            switch (message.getType()) {
-                case AppendEntries:
-                    MessageProtos.AppendEntries appendMessage = (MessageProtos.AppendEntries) message.getBody();
-                    //check to see if this is the real leader
-                    if (appendMessage.getTerm() >= currentTerm){
-                        taskQueue.add(new QueueEntry(QueueEntry.Type.Message, message.getBody()));
-                        return State.FOLLOWER;
-                    }
-                    break;
-                case RequestVoteResponse:
-                    MessageProtos.RequestVoteResponse response = (MessageProtos.RequestVoteResponse) message.getBody();
-                    if(response.getVoteGranted()) {
-                        numVotes++;
-                        //check if we have majority
-                        if (numVotes > ipSet.size() / 2)
-                            return State.LEADER;
-                    }
-                    break;
+            if(entry != null){
+                Message message = (Message) entry.getBody();
+                switch (message.getType()) {
+                    case AppendEntries:
+                        MessageProtos.AppendEntries appendMessage = (MessageProtos.AppendEntries) message.getBody();
+                        //check to see if this is the real leader
+                        if (appendMessage.getTerm() >= currentTerm){
+                            taskQueue.add(new QueueEntry(QueueEntry.Type.Message, message.getBody()));
+                            return State.FOLLOWER;
+                        }
+                        break;
+                    case RequestVoteResponse:
+                        MessageProtos.RequestVoteResponse response = (MessageProtos.RequestVoteResponse) message.getBody();
+                        if(response.getVoteGranted()) {
+                            numVotes++;
+                            //check if we have majority
+                            if (numVotes > ipSet.size() / 2)
+                                return State.LEADER;
+                        }
+                        break;
+                }
             }
 
         }

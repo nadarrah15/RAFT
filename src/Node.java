@@ -5,6 +5,8 @@ import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -33,6 +35,11 @@ public class Node {
     }
 
     public Node(HashSet<String> ipSet) {
+        try {
+            id = InetAddress.getLocalHost().getHostAddress();
+        }catch (UnknownHostException e){
+            e.printStackTrace();
+        }
         this.ipSet = ipSet; // Store IP addresses in .txt file
         currentTerm = 0;
         commitIndex = 0;

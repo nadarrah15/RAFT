@@ -5,6 +5,8 @@ import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
+import java.net.Inet4Address;
+import java.net.UnknownHostException;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -20,6 +22,7 @@ public class Node {
     private int commitIndex; // Index of highest log entry known to be committed (initialized to 0)
     private int lastApplied; // Index of highest log entry applied to state machine (initialized to 0)
     private State state; // Defines follower, candidate, or leader state
+    private Net net;
     private Queue<QueueEntry> taskQueue;    //TODO: Reply to 'What is this?'
 
     //TODO implement LinkedHashMap of threads handling interaction with other nodes
@@ -32,15 +35,17 @@ public class Node {
         FOLLOWER, CANDIDATE, LEADER
     }
 
-    public Node(HashSet<String> ipSet) {
+    public Node(HashSet<String> ipSet) throws UnknownHostException {
         this.ipSet = ipSet; // Store IP addresses in .txt file
         currentTerm = 0;
+        id = Inet4Address.getLocalHost().getHostAddress();
         commitIndex = 0;
         lastApplied = 0;
         state = State.FOLLOWER; // Begin life as Follower
+        net = new Net();
+
         ClientHandler clientHandler = new ClientHandler(this); // Start new thread for console (local client) input
-        clientHandler.start();
-        //TODO: Find a way to randomly initialize unique ID
+        new Thread(clientHandler).start();
     }
 
     public void run() {
@@ -163,7 +168,13 @@ public class Node {
 
                                 }
 
+                                byte[] data = appendEntriesResponse.toByteArray();
+
+                                // Call Net object to actually send message across sockets
+                                net.send(appendEntries.getLeaderId(), 1, data.length, data);
+
                                 break;
+
                             case RequestVoteResponse:
                                 MessageProtos.RequestVote requestVote = (MessageProtos.RequestVote) message.getBody();
                                 MessageProtos.RequestVoteResponse requestVoteResponse;
@@ -181,8 +192,10 @@ public class Node {
                                     votedFor = requestVote.getCandidateId();
                                 }
 
+                                data = requestVoteResponse.toByteArray();
+
                                 // Call Net object to actually send message across sockets
-                                requestVoteResponse.toByteArray();
+                                net.send(requestVote.getCandidateId(), 3, data.length, data);
 
                                 break;
                             // Ignore AppendEntries, RequestVote tasks as follower

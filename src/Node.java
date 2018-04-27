@@ -37,6 +37,7 @@ public class Node {
         currentTerm = 0;
         commitIndex = 0;
         lastApplied = 0;
+        taskQueue = new ConcurrentLinkedQueue<QueueEntry>();
         state = State.FOLLOWER; // Begin life as Follower
         ClientHandler clientHandler = new ClientHandler(this); // Start new thread for console (local client) input
         clientHandler.start();

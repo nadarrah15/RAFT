@@ -234,18 +234,18 @@ public class Node {
         sendAll(requestVote);
 
         //start timer
-        long start = System.nanoTime();
+        long start = System.currentTimeMillis();
 
+        //loop the election
         while (true) {
 
             //wait for incoming message until timeout. Once timeout occurs, restart candidacy
             long end = System.nanoTime();
-            if (end - start == 500)     //
+            if (end - start == 500)
                 return State.CANDIDATE;
 
             //Receive either a heartbeat or a vote
-
-            Message message = (Message) taskQueue.poll().getBody();
+            QueueEntry entry = taskQueue.poll();
 
             /*
             if(!message.isIncoming())
@@ -253,26 +253,29 @@ public class Node {
              */
 
             //determine message type
-            switch (message.getType()) {
-                case AppendEntries:
-                    MessageProtos.AppendEntries appendMessage = (MessageProtos.AppendEntries) message.getBody();
-                    //check to see if this is the real leader
-                    if (appendMessage.getTerm() >= currentTerm){
-                        taskQueue.add(new QueueEntry(QueueEntry.Type.Message, message.getBody()));
-                        return State.FOLLOWER;
-                    }
-                    break;
-                case RequestVoteResponse:
-                    MessageProtos.RequestVoteResponse response = (MessageProtos.RequestVoteResponse) message.getBody();
-                    if(response.getVoteGranted()) {
-                        numVotes++;
-                        //check if we have majority
-                        if (numVotes > ipSet.size() / 2)
-                            return State.LEADER;
-                    }
-                    break;
+            if(entry != null){
+                Message message = (Message) entry.getBody();
+                switch (message.getType()) {
+                    case AppendEntries:
+                        MessageProtos.AppendEntries appendMessage = (MessageProtos.AppendEntries) message.getBody();
+                        //check to see if this is the real leader
+                        if (appendMessage.getTerm() >= currentTerm){
+                            //TODO what if the message is not empty
+                            return State.FOLLOWER;
+                        }
+                        break;
+                    case RequestVoteResponse:
+                        MessageProtos.RequestVoteResponse response = (MessageProtos.RequestVoteResponse) message.getBody();
+                        if(response.getVoteGranted()) {
+                            numVotes++;
+                            start = System.currentTimeMillis();
+                            //check if we have majority
+                            if (numVotes > ipSet.size() / 2)
+                                return State.LEADER;
+                        }
+                        break;
+                }
             }
-
         }
     }
 
@@ -329,17 +332,17 @@ public class Node {
         }
     }
 
-            // sends message to all nodes
-            private void sendAll (com.google.protobuf.GeneratedMessageV3 message){
-                //TODO: write code to send the message to all the nodes
-            }
+    // sends message to all nodes
+    private void sendAll (com.google.protobuf.GeneratedMessageV3 message){
+        //TODO: write code to send the message to all the nodes
+    }
 
-            //receives message from other nodes
-            private Message getMessage () {
-                //TODO: implement
-                return null;
-            }
-            private void sendToLeader (Message message){
-                //TODO: Write
-            }
-        }
+    //receives message from other nodes
+    private Message getMessage () {
+        //TODO: implement
+        return null;
+    }
+    private void sendToLeader (Message message){
+        //TODO: Write
+    }
+}

@@ -11,16 +11,16 @@ import java.util.concurrent.*;
 public class Node {
 
     private Random rand = new Random();
-    ExecutorService service = Executors.newSingleThreadExecutor();  //TODO: Reply to 'What is this?'
+    ExecutorService service = Executors.newSingleThreadExecutor();  //TODO: Write description
     private HashSet<String> ipSet; // Stores IP addresses of fellow nodes
-    private String id;         // nodes ID
+    private String id;         // nodes ID TODO: never instantiated
     private int currentTerm; // Latest term server has seen (initialized to 0 on first boot)
     private String votedFor; // Stores candidateId that received vote in current term (or null if none)
     private ArrayList<LogEntry> log; // Stores log entries
     private int commitIndex; // Index of highest log entry known to be committed (initialized to 0)
     private int lastApplied; // Index of highest log entry applied to state machine (initialized to 0)
     private State state; // Defines follower, candidate, or leader state
-    private Queue<QueueEntry> taskQueue;    //TODO: Reply to 'What is this?'
+    private Queue<QueueEntry> taskQueue;    //TODO: never instantiated
 
     //TODO implement LinkedHashMap of threads handling interaction with other nodes
     // A: Dedicate one thread to receiving all messages, one per node for sending messages?
@@ -260,7 +260,7 @@ public class Node {
                         MessageProtos.AppendEntries appendMessage = (MessageProtos.AppendEntries) message.getBody();
                         //check to see if this is the real leader
                         if (appendMessage.getTerm() >= currentTerm){
-                            //TODO what if the message is not empty
+                            addToFront(entry);
                             return State.FOLLOWER;
                         }
                         break;
@@ -330,6 +330,14 @@ public class Node {
                 return State.FOLLOWER;
             }
         }
+    }
+
+    //adds entry to the front of the queue
+    private void addToFront(QueueEntry entry){
+        Queue<QueueEntry> temp = new ConcurrentLinkedQueue<QueueEntry>();   //TODO: make sure this is the right structure
+        temp.add(entry);
+        temp.addAll(taskQueue);
+        taskQueue = temp;
     }
 
     // sends message to all nodes

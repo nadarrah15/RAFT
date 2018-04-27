@@ -20,7 +20,7 @@ public class Node {
     private int commitIndex; // Index of highest log entry known to be committed (initialized to 0)
     private int lastApplied; // Index of highest log entry applied to state machine (initialized to 0)
     private State state; // Defines follower, candidate, or leader state
-    private Queue<QueueEntry> taskQueue;    //TODO: never instantiated
+    private Queue<QueueEntry> taskQueue;
 
     //TODO implement LinkedHashMap of threads handling interaction with other nodes
     // A: Dedicate one thread to receiving all messages, one per node for sending messages?

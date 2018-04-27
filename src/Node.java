@@ -42,7 +42,8 @@ public class Node {
         commitIndex = 0;
         lastApplied = 0;
         state = State.FOLLOWER; // Begin life as Follower
-        net = new Net();
+        net = new Net(new MessageSerializer(this));
+        taskQueue = new ConcurrentLinkedQueue<>();
 
         ClientHandler clientHandler = new ClientHandler(this); // Start new thread for console (local client) input
         new Thread(clientHandler).start();

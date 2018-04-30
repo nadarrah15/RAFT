@@ -81,47 +81,6 @@ public class Node {
         //TODO Implement timer
         // Loop through performFollower operations
         while (true) {
-
-            /*
-            try {
-                //Create Single-Thread for listener
-                Runnable r = () -> {
-                        Message message = incoming message;
-                        switch(message.getType()){
-                            case AppendEntries:
-                                if(AppendEntry.term > currentTerm)
-                                    currentTerm = AppendEntry.term;
-                                if(message.getBody().term < currentTerm)
-                                    return new AppendEntryResponse(false);
-                                if(prevLogIndex >= log.size() || log.get(prevLogIndex).getTerm() != prevLogTerm)
-                                    return new AppendEntryResponse(false);
-                                if(log.get(prevLogIndex).getTerm() != prevLogTerm){
-                                    log.removeRange(prevLogIndex, log.size());
-                                for(all entries in AppendEntries)
-                                    log.add(entry);
-                                if(leaderCommit > commitIndex){
-                                    commitIndex = min(leaderCommit, log.get(log.size() - 1).index);
-                                return new AppendEntryResponse(true);
-                            case RequestVote:
-                                if(term < currentTerm)
-                                    return new RequestVoteResponse(false);
-                                if((votedFor == null || votedFor == candidateId) && log is up to date)
-                                    return new RequestVoteResponse(true);
-                };
-
-                Future<?> f = service.submit(r);
-                f.get(timeout, TimeUnit.MILLISECONDS);
-            } catch (TimeoutException e) {
-                return State.CANDIDATE;
-            } catch (InterruptedException e) {
-                System.out.println("Something Went Wrong In Execution");
-            } catch (ExecutionException e) {
-                System.out.println("Error in Entry Handling");
-            }
-
-            break;
-           */
-
             // Check taskQueue
             QueueEntry task = taskQueue.remove();
             // Check entry type
@@ -277,6 +236,7 @@ public class Node {
         }
 
         // Loop through performLeader operations
+        sendAll(MessageProtos.AppendEntries.newBuilder().build());
         while (true) {
 
             if (commitIndex > lastApplied) {
@@ -285,25 +245,39 @@ public class Node {
                 // apply(log.get(lastApplied))
             }
 
-            //TODO Check if in-queue and out-queue are empty
-            /*
-            if (client input queue has something) {
-                send AppendEntries RPC
-                reset timer
-            } else if (RPC queue has something) {
-                respond appropriately
-            } else if (RPC Response queue has something) {
-                respond appropriately
-            } else {
-                send heartbeat
+            if (!taskQueue.isEmpty()) {
+                QueueEntry entry = taskQueue.remove();
+                // Check entry type
+                switch (entry.getType()) {
+                    case Input:
+                        //Process Client Command
+                        break;
+
+                    case Message:
+                        Message message = (Message) entry.getBody();
+                        // Check if message is ingoing or outgoing
+                        if (message.isIncoming()) {
+                            // Process message
+                            switch (message.getType()) {
+                                case AppendEntries:
+                                    com.google.protobuf.GeneratedMessageV3 appendEntries = message.getBody();
+                                    sendAll(appendEntries);
+                                    break;
+                                case RequestVote:
+                                    //Process RequestVotes
+                            }
+                        } else {
+                            sendAll(MessageProtos.AppendEntries.newBuilder().build());
+                        }
+
+
+                        //TODO replace with further implementation
+                        break;
+                }
+
+                return State.FOLLOWER;
             }
-            */
-
-            //TODO replace with further implementation
-            break;
         }
-
-        return State.FOLLOWER;
     }
 
     // sends message to all nodes

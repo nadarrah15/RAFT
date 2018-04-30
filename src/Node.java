@@ -75,99 +75,113 @@ public class Node {
 
     private State performFollower() {
         int timeout = rand.nextInt(150) + 150;
-        if (commitIndex > lastApplied) {
-            lastApplied++;
-            //TODO Implement applying to log
-            // apply(log.get(lastApplied))
-        }
-        //TODO Implement timer
-        // Loop through performFollower operations
-        while (true) {
-            // Check taskQueue
-            QueueEntry task = taskQueue.remove();
-            // Check entry type
-            switch (task.getType()) {
-                case Input:
-                    // Check type of client input (command, crash, reboot, etc.)
-                    // Redirect client commands to leader
-                    break;
 
-                case Message:
-                    Message message = (Message) task.getBody();
-                    // Check if message is ingoing or outgoing
-                    if (message.isIncoming()) {
-                        // Process message
-                        switch (message.getType()) {
-                            case AppendEntriesResponse:
-                                MessageProtos.AppendEntries appendEntries = (MessageProtos.AppendEntries) message.getBody();
-                                MessageProtos.AppendEntriesResponse appendEntriesResponse;
+        try {
+            Runnable r = () -> {
+                if (commitIndex > lastApplied) {
+                    lastApplied++;
+                    //TODO Implement applying to log
+                    // apply(log.get(lastApplied))
+                }
 
-                                // Construct response
-                                if (appendEntries.getTerm() < currentTerm ||
-                                        log.size() <= appendEntries.getPrevLogTerm() ||
-                                        log.get(appendEntries.getPrevLogIndex()).term != appendEntries.getPrevLogTerm()) {
-                                    // Prepare failure response
-                                    appendEntriesResponse = MessageProtos.AppendEntriesResponse.newBuilder().setSuccess(false).setTerm(currentTerm).build();
-                                } else {
-                                    // Prepare success response
-                                    appendEntriesResponse = MessageProtos.AppendEntriesResponse.newBuilder().setSuccess(true).setTerm(currentTerm).build();
+                // Loop through performFollower operations
+                while (true) {
+                    // Check taskQueue
+                    QueueEntry task = taskQueue.remove();
+                    // Check entry type
+                    switch (task.getType()) {
+                        case Input:
+                            // Check type of client input (command, crash, reboot, etc.)
+                            // Redirect client commands to leader
+                            break;
 
-                                    if (appendEntries.getEntriesCount() < 1) {
-                                        // If entries[] is empty, acknowledge message as heartbeat
-                                        //Reset timer
-                                    } else {
-                                        // If existing entry conflicts with new one (same index, different terms), delete existing entry and all that follow
-                                        for (int start = appendEntries.getPrevLogIndex() + 1; log.size() > start; ) {
-                                            log.remove(start);
+                        case Message:
+                            Message message = (Message) task.getBody();
+                            // Check if message is ingoing or outgoing
+                            if (message.isIncoming()) {
+                                // Process message
+                                switch (message.getType()) {
+                                    case AppendEntriesResponse:
+                                        MessageProtos.AppendEntries appendEntries = (MessageProtos.AppendEntries) message.getBody();
+                                        MessageProtos.AppendEntriesResponse appendEntriesResponse;
+
+                                        // Construct response
+                                        if (appendEntries.getTerm() < currentTerm ||
+                                                log.size() <= appendEntries.getPrevLogTerm() ||
+                                                log.get(appendEntries.getPrevLogIndex()).term != appendEntries.getPrevLogTerm()) {
+                                            // Prepare failure response
+                                            appendEntriesResponse = MessageProtos.AppendEntriesResponse.newBuilder().setSuccess(false).setTerm(currentTerm).build();
+                                        } else {
+                                            // Prepare success response
+                                            appendEntriesResponse = MessageProtos.AppendEntriesResponse.newBuilder().setSuccess(true).setTerm(currentTerm).build();
+
+                                            if (appendEntries.getEntriesCount() < 1) {
+                                                // If entries[] is empty, acknowledge message as heartbeat
+                                                //Reset timer
+                                            } else {
+                                                // If existing entry conflicts with new one (same index, different terms), delete existing entry and all that follow
+                                                for (int start = appendEntries.getPrevLogIndex() + 1; log.size() > start; ) {
+                                                    log.remove(start);
+                                                }
+
+                                                // Append new entries to log
+                                                for (int i = 0; i < appendEntries.getEntriesCount(); i++) {
+                                                    MessageProtos.AppendEntries.Entry entry = appendEntries.getEntries(i);
+                                                    log.add(new LogEntry(entry.getTerm(), entry.getMessage()));
+                                                }
+                                            }
+
                                         }
 
-                                        // Append new entries to log
-                                        for (int i = 0; i < appendEntries.getEntriesCount(); i++) {
-                                            MessageProtos.AppendEntries.Entry entry = appendEntries.getEntries(i);
-                                            log.add(new LogEntry(entry.getTerm(), entry.getMessage()));
+                                        byte[] data = appendEntriesResponse.toByteArray();
+
+                                        // Call Net object to actually send message across sockets
+                                        net.send(appendEntries.getLeaderId(), PORT, 1, data.length, data);
+
+                                        break;
+
+                                    case RequestVoteResponse:
+                                        MessageProtos.RequestVote requestVote = (MessageProtos.RequestVote) message.getBody();
+                                        MessageProtos.RequestVoteResponse requestVoteResponse;
+
+                                        // Construct response
+                                        if (requestVote.getTerm() >= currentTerm &&
+                                                votedFor == null &&
+                                                requestVote.getLastLogIndex() >= log.size() - 1 &&
+                                                requestVote.getLastLogTerm() >= log.get(log.size() - 1).term) {
+                                            // Prepare to grant vote
+                                            requestVoteResponse = MessageProtos.RequestVoteResponse.newBuilder().setVoteGranted(true).setTerm(currentTerm).build();
+                                        } else {
+                                            // Prepare to deny vote
+                                            requestVoteResponse = MessageProtos.RequestVoteResponse.newBuilder().setVoteGranted(false).setTerm(currentTerm).build();
+                                            votedFor = requestVote.getCandidateId();
                                         }
-                                    }
 
+                                        data = requestVoteResponse.toByteArray();
+
+                                        // Call Net object to actually send message across sockets
+                                        net.send(requestVote.getCandidateId(), PORT, 3, data.length, data);
+
+                                        break;
+                                    // Ignore AppendEntries, RequestVote tasks as follower
                                 }
-
-                                byte[] data = appendEntriesResponse.toByteArray();
-
-                                // Call Net object to actually send message across sockets
-                                net.send(appendEntries.getLeaderId(), PORT,1, data.length, data);
-
-                                break;
-
-                            case RequestVoteResponse:
-                                MessageProtos.RequestVote requestVote = (MessageProtos.RequestVote) message.getBody();
-                                MessageProtos.RequestVoteResponse requestVoteResponse;
-
-                                // Construct response
-                                if (requestVote.getTerm() >= currentTerm &&
-                                        votedFor == null &&
-                                        requestVote.getLastLogIndex() >= log.size() - 1 &&
-                                        requestVote.getLastLogTerm() >= log.get(log.size() - 1).term) {
-                                    // Prepare to grant vote
-                                    requestVoteResponse = MessageProtos.RequestVoteResponse.newBuilder().setVoteGranted(true).setTerm(currentTerm).build();
-                                } else {
-                                    // Prepare to deny vote
-                                    requestVoteResponse = MessageProtos.RequestVoteResponse.newBuilder().setVoteGranted(false).setTerm(currentTerm).build();
-                                    votedFor = requestVote.getCandidateId();
-                                }
-
-                                data = requestVoteResponse.toByteArray();
-
-                                // Call Net object to actually send message across sockets
-                                net.send(requestVote.getCandidateId(), PORT,3, data.length, data);
-
-                                break;
-                            // Ignore AppendEntries, RequestVote tasks as follower
-                        }
-                    } else {
-                        // Send message to leader node
+                            } else {
+                                // Send message to leader node
+                            }
                     }
-            }
 
-            break;
+                    break;
+                }
+            };
+
+
+            Future<?> f = service.submit(r);
+            // Run thread; throws TimeoutException if thread completion exceeds timeout
+            // Thread completes operations regardless of TimeoutException
+            f.get(timeout, TimeUnit.MILLISECONDS);
+
+        } catch (TimeoutException | InterruptedException | ExecutionException e) {
+            e.printStackTrace();
         }
 
         return State.CANDIDATE;

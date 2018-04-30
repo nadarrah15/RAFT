@@ -1,15 +1,12 @@
 
-import com.example.raft.MessageProtos;
 import com.google.protobuf.GeneratedMessageV3;
 
-import java.io.Serializable;
-
-/*
-Wraps generated Protobuf objects
+/**
+ * Wraps generated Protobuf objects
  */
 public class Message {
 
-    private boolean isIncoming; // True if incoming; false if outgoing
+    private String recipient; // Incoming if null or empty
     private Type type; // Type of underlying RPC
     private GeneratedMessageV3 body;
 
@@ -32,14 +29,18 @@ public class Message {
         }
     }
 
-    public Message(boolean isIncoming, Type type, GeneratedMessageV3 body) {
-        this.isIncoming = isIncoming;
+    public Message(String recipient, Type type, GeneratedMessageV3 body) {
+        this.recipient = recipient;
         this.type = type;
         this.body = body;
     }
 
+    public String getRecipient() {
+        return recipient;
+    }
+
     public boolean isIncoming() {
-        return isIncoming;
+        return recipient == null || recipient.isEmpty();
     }
 
     public Type getType() {

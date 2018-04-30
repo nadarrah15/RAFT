@@ -1,4 +1,5 @@
 import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -16,25 +17,37 @@ public class Net {
         //1. launch a socket that listens on port p
         //2. when a connection comes in,
         //2a. launch a thread to receive the message and send it to the node queue
-        Runnable r = () -> {
+        Runnable rs = () -> {
             try {
                 ServerSocket serverSocket = new ServerSocket(port);
 
                 while (true) {
                     Socket clientSocket = serverSocket.accept();
-                    DataInputStream dis = new DataInputStream(clientSocket.getInputStream());
-                    int type = dis.readInt();
-                    byte[] data = new byte[dis.readInt()];
+                    // New thread per client
+                    Runnable rc = () -> {
+                        try {
+                            DataInputStream dis = new DataInputStream(clientSocket.getInputStream());
+                            int type = dis.readInt();
+                            byte[] data = new byte[dis.readInt()];
 
-                    dis.readFully(data);
-                    serializer.receive(type, data);
+                            dis.readFully(data);
+                            serializer.receive(type, data);
+
+                            clientSocket.close();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+
+                    };
+                    new Thread(rc).start();
                 }
-            } catch (Exception e) {
+
+            } catch (IOException e) {
                 e.printStackTrace();
             }
         };
 
-        new Thread(r).start();
+        new Thread(rs).start();
     }
 
     public void send(Set<String> ipSet, int port, int type, int length, byte[] data) {
@@ -49,14 +62,23 @@ public class Net {
         //  b. send the type, data.length, data
         //      bi. Types: AppendEntries, 0; AppendEntriesResponse, 1; RequestVote, 2; RequestVoteResponse, 3
         //  c. close the socket
-        try {
-            Socket sendSocket = new Socket(ip, port);
+        // New thread per recipient
+        Runnable rs = () -> {
+            try {
+                Socket sendSocket = new Socket(ip, port);
+                DataOutputStream dos = new DataOutputStream(sendSocket.getOutputStream());
 
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+                dos.writeInt(type);
+                dos.writeInt(length);
+                dos.write(data);
 
+                sendSocket.close();
+                dos.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        };
 
+        new Thread(rs).start();
     }
-
 }

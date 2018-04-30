@@ -60,23 +60,28 @@ public final class MessageProtos {
     int getPrevLogTerm();
 
     /**
-     * <code>repeated string entries = 5;</code>
+     * <code>repeated .raft.AppendEntries.Entry entries = 5;</code>
      */
-    java.util.List<java.lang.String>
+    java.util.List<com.example.raft.MessageProtos.AppendEntries.Entry> 
         getEntriesList();
     /**
-     * <code>repeated string entries = 5;</code>
+     * <code>repeated .raft.AppendEntries.Entry entries = 5;</code>
+     */
+    com.example.raft.MessageProtos.AppendEntries.Entry getEntries(int index);
+    /**
+     * <code>repeated .raft.AppendEntries.Entry entries = 5;</code>
      */
     int getEntriesCount();
     /**
-     * <code>repeated string entries = 5;</code>
+     * <code>repeated .raft.AppendEntries.Entry entries = 5;</code>
      */
-    java.lang.String getEntries(int index);
+    java.util.List<? extends com.example.raft.MessageProtos.AppendEntries.EntryOrBuilder> 
+        getEntriesOrBuilderList();
     /**
-     * <code>repeated string entries = 5;</code>
+     * <code>repeated .raft.AppendEntries.Entry entries = 5;</code>
      */
-    com.google.protobuf.ByteString
-        getEntriesBytes(int index);
+    com.example.raft.MessageProtos.AppendEntries.EntryOrBuilder getEntriesOrBuilder(
+        int index);
 
     /**
      * <code>required int32 leaderCommit = 6;</code>
@@ -104,7 +109,7 @@ public final class MessageProtos {
       leaderId_ = "";
       prevLogIndex_ = 0;
       prevLogTerm_ = 0;
-      entries_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+      entries_ = java.util.Collections.emptyList();
       leaderCommit_ = 0;
     }
 
@@ -161,12 +166,12 @@ public final class MessageProtos {
               break;
             }
             case 42: {
-              com.google.protobuf.ByteString bs = input.readBytes();
               if (!((mutable_bitField0_ & 0x00000010) == 0x00000010)) {
-                entries_ = new com.google.protobuf.LazyStringArrayList();
+                entries_ = new java.util.ArrayList<com.example.raft.MessageProtos.AppendEntries.Entry>();
                 mutable_bitField0_ |= 0x00000010;
               }
-              entries_.add(bs);
+              entries_.add(
+                  input.readMessage(com.example.raft.MessageProtos.AppendEntries.Entry.PARSER, extensionRegistry));
               break;
             }
             case 48: {
@@ -183,7 +188,7 @@ public final class MessageProtos {
             e).setUnfinishedMessage(this);
       } finally {
         if (((mutable_bitField0_ & 0x00000010) == 0x00000010)) {
-          entries_ = entries_.getUnmodifiableView();
+          entries_ = java.util.Collections.unmodifiableList(entries_);
         }
         this.unknownFields = unknownFields.build();
         makeExtensionsImmutable();
@@ -199,6 +204,665 @@ public final class MessageProtos {
       return com.example.raft.MessageProtos.internal_static_raft_AppendEntries_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
               com.example.raft.MessageProtos.AppendEntries.class, com.example.raft.MessageProtos.AppendEntries.Builder.class);
+    }
+
+    public interface EntryOrBuilder extends
+        // @@protoc_insertion_point(interface_extends:raft.AppendEntries.Entry)
+        com.google.protobuf.MessageOrBuilder {
+
+      /**
+       * <code>required int32 term = 1;</code>
+       */
+      boolean hasTerm();
+      /**
+       * <code>required int32 term = 1;</code>
+       */
+      int getTerm();
+
+      /**
+       * <code>required string message = 2;</code>
+       */
+      boolean hasMessage();
+      /**
+       * <code>required string message = 2;</code>
+       */
+      java.lang.String getMessage();
+      /**
+       * <code>required string message = 2;</code>
+       */
+      com.google.protobuf.ByteString
+          getMessageBytes();
+    }
+    /**
+     * Protobuf type {@code raft.AppendEntries.Entry}
+     */
+    public  static final class Entry extends
+        com.google.protobuf.GeneratedMessageV3 implements
+        // @@protoc_insertion_point(message_implements:raft.AppendEntries.Entry)
+        EntryOrBuilder {
+    private static final long serialVersionUID = 0L;
+      // Use Entry.newBuilder() to construct.
+      private Entry(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+        super(builder);
+      }
+      private Entry() {
+        term_ = 0;
+        message_ = "";
+      }
+
+      @java.lang.Override
+      public final com.google.protobuf.UnknownFieldSet
+      getUnknownFields() {
+        return this.unknownFields;
+      }
+      private Entry(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        this();
+        if (extensionRegistry == null) {
+          throw new java.lang.NullPointerException();
+        }
+        int mutable_bitField0_ = 0;
+        com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+            com.google.protobuf.UnknownFieldSet.newBuilder();
+        try {
+          boolean done = false;
+          while (!done) {
+            int tag = input.readTag();
+            switch (tag) {
+              case 0:
+                done = true;
+                break;
+              default: {
+                if (!parseUnknownField(
+                    input, unknownFields, extensionRegistry, tag)) {
+                  done = true;
+                }
+                break;
+              }
+              case 8: {
+                bitField0_ |= 0x00000001;
+                term_ = input.readInt32();
+                break;
+              }
+              case 18: {
+                com.google.protobuf.ByteString bs = input.readBytes();
+                bitField0_ |= 0x00000002;
+                message_ = bs;
+                break;
+              }
+            }
+          }
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          throw e.setUnfinishedMessage(this);
+        } catch (java.io.IOException e) {
+          throw new com.google.protobuf.InvalidProtocolBufferException(
+              e).setUnfinishedMessage(this);
+        } finally {
+          this.unknownFields = unknownFields.build();
+          makeExtensionsImmutable();
+        }
+      }
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return com.example.raft.MessageProtos.internal_static_raft_AppendEntries_Entry_descriptor;
+      }
+
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return com.example.raft.MessageProtos.internal_static_raft_AppendEntries_Entry_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                com.example.raft.MessageProtos.AppendEntries.Entry.class, com.example.raft.MessageProtos.AppendEntries.Entry.Builder.class);
+      }
+
+      private int bitField0_;
+      public static final int TERM_FIELD_NUMBER = 1;
+      private int term_;
+      /**
+       * <code>required int32 term = 1;</code>
+       */
+      public boolean hasTerm() {
+        return ((bitField0_ & 0x00000001) == 0x00000001);
+      }
+      /**
+       * <code>required int32 term = 1;</code>
+       */
+      public int getTerm() {
+        return term_;
+      }
+
+      public static final int MESSAGE_FIELD_NUMBER = 2;
+      private volatile java.lang.Object message_;
+      /**
+       * <code>required string message = 2;</code>
+       */
+      public boolean hasMessage() {
+        return ((bitField0_ & 0x00000002) == 0x00000002);
+      }
+      /**
+       * <code>required string message = 2;</code>
+       */
+      public java.lang.String getMessage() {
+        java.lang.Object ref = message_;
+        if (ref instanceof java.lang.String) {
+          return (java.lang.String) ref;
+        } else {
+          com.google.protobuf.ByteString bs = 
+              (com.google.protobuf.ByteString) ref;
+          java.lang.String s = bs.toStringUtf8();
+          if (bs.isValidUtf8()) {
+            message_ = s;
+          }
+          return s;
+        }
+      }
+      /**
+       * <code>required string message = 2;</code>
+       */
+      public com.google.protobuf.ByteString
+          getMessageBytes() {
+        java.lang.Object ref = message_;
+        if (ref instanceof java.lang.String) {
+          com.google.protobuf.ByteString b = 
+              com.google.protobuf.ByteString.copyFromUtf8(
+                  (java.lang.String) ref);
+          message_ = b;
+          return b;
+        } else {
+          return (com.google.protobuf.ByteString) ref;
+        }
+      }
+
+      private byte memoizedIsInitialized = -1;
+      public final boolean isInitialized() {
+        byte isInitialized = memoizedIsInitialized;
+        if (isInitialized == 1) return true;
+        if (isInitialized == 0) return false;
+
+        if (!hasTerm()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+        if (!hasMessage()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+        memoizedIsInitialized = 1;
+        return true;
+      }
+
+      public void writeTo(com.google.protobuf.CodedOutputStream output)
+                          throws java.io.IOException {
+        if (((bitField0_ & 0x00000001) == 0x00000001)) {
+          output.writeInt32(1, term_);
+        }
+        if (((bitField0_ & 0x00000002) == 0x00000002)) {
+          com.google.protobuf.GeneratedMessageV3.writeString(output, 2, message_);
+        }
+        unknownFields.writeTo(output);
+      }
+
+      public int getSerializedSize() {
+        int size = memoizedSize;
+        if (size != -1) return size;
+
+        size = 0;
+        if (((bitField0_ & 0x00000001) == 0x00000001)) {
+          size += com.google.protobuf.CodedOutputStream
+            .computeInt32Size(1, term_);
+        }
+        if (((bitField0_ & 0x00000002) == 0x00000002)) {
+          size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, message_);
+        }
+        size += unknownFields.getSerializedSize();
+        memoizedSize = size;
+        return size;
+      }
+
+      @java.lang.Override
+      public boolean equals(final java.lang.Object obj) {
+        if (obj == this) {
+         return true;
+        }
+        if (!(obj instanceof com.example.raft.MessageProtos.AppendEntries.Entry)) {
+          return super.equals(obj);
+        }
+        com.example.raft.MessageProtos.AppendEntries.Entry other = (com.example.raft.MessageProtos.AppendEntries.Entry) obj;
+
+        boolean result = true;
+        result = result && (hasTerm() == other.hasTerm());
+        if (hasTerm()) {
+          result = result && (getTerm()
+              == other.getTerm());
+        }
+        result = result && (hasMessage() == other.hasMessage());
+        if (hasMessage()) {
+          result = result && getMessage()
+              .equals(other.getMessage());
+        }
+        result = result && unknownFields.equals(other.unknownFields);
+        return result;
+      }
+
+      @java.lang.Override
+      public int hashCode() {
+        if (memoizedHashCode != 0) {
+          return memoizedHashCode;
+        }
+        int hash = 41;
+        hash = (19 * hash) + getDescriptor().hashCode();
+        if (hasTerm()) {
+          hash = (37 * hash) + TERM_FIELD_NUMBER;
+          hash = (53 * hash) + getTerm();
+        }
+        if (hasMessage()) {
+          hash = (37 * hash) + MESSAGE_FIELD_NUMBER;
+          hash = (53 * hash) + getMessage().hashCode();
+        }
+        hash = (29 * hash) + unknownFields.hashCode();
+        memoizedHashCode = hash;
+        return hash;
+      }
+
+      public static com.example.raft.MessageProtos.AppendEntries.Entry parseFrom(
+          java.nio.ByteBuffer data)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data);
+      }
+      public static com.example.raft.MessageProtos.AppendEntries.Entry parseFrom(
+          java.nio.ByteBuffer data,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data, extensionRegistry);
+      }
+      public static com.example.raft.MessageProtos.AppendEntries.Entry parseFrom(
+          com.google.protobuf.ByteString data)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data);
+      }
+      public static com.example.raft.MessageProtos.AppendEntries.Entry parseFrom(
+          com.google.protobuf.ByteString data,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data, extensionRegistry);
+      }
+      public static com.example.raft.MessageProtos.AppendEntries.Entry parseFrom(byte[] data)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data);
+      }
+      public static com.example.raft.MessageProtos.AppendEntries.Entry parseFrom(
+          byte[] data,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return PARSER.parseFrom(data, extensionRegistry);
+      }
+      public static com.example.raft.MessageProtos.AppendEntries.Entry parseFrom(java.io.InputStream input)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input);
+      }
+      public static com.example.raft.MessageProtos.AppendEntries.Entry parseFrom(
+          java.io.InputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input, extensionRegistry);
+      }
+      public static com.example.raft.MessageProtos.AppendEntries.Entry parseDelimitedFrom(java.io.InputStream input)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseDelimitedWithIOException(PARSER, input);
+      }
+      public static com.example.raft.MessageProtos.AppendEntries.Entry parseDelimitedFrom(
+          java.io.InputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+      }
+      public static com.example.raft.MessageProtos.AppendEntries.Entry parseFrom(
+          com.google.protobuf.CodedInputStream input)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input);
+      }
+      public static com.example.raft.MessageProtos.AppendEntries.Entry parseFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        return com.google.protobuf.GeneratedMessageV3
+            .parseWithIOException(PARSER, input, extensionRegistry);
+      }
+
+      public Builder newBuilderForType() { return newBuilder(); }
+      public static Builder newBuilder() {
+        return DEFAULT_INSTANCE.toBuilder();
+      }
+      public static Builder newBuilder(com.example.raft.MessageProtos.AppendEntries.Entry prototype) {
+        return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+      }
+      public Builder toBuilder() {
+        return this == DEFAULT_INSTANCE
+            ? new Builder() : new Builder().mergeFrom(this);
+      }
+
+      @java.lang.Override
+      protected Builder newBuilderForType(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        Builder builder = new Builder(parent);
+        return builder;
+      }
+      /**
+       * Protobuf type {@code raft.AppendEntries.Entry}
+       */
+      public static final class Builder extends
+          com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+          // @@protoc_insertion_point(builder_implements:raft.AppendEntries.Entry)
+          com.example.raft.MessageProtos.AppendEntries.EntryOrBuilder {
+        public static final com.google.protobuf.Descriptors.Descriptor
+            getDescriptor() {
+          return com.example.raft.MessageProtos.internal_static_raft_AppendEntries_Entry_descriptor;
+        }
+
+        protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+            internalGetFieldAccessorTable() {
+          return com.example.raft.MessageProtos.internal_static_raft_AppendEntries_Entry_fieldAccessorTable
+              .ensureFieldAccessorsInitialized(
+                  com.example.raft.MessageProtos.AppendEntries.Entry.class, com.example.raft.MessageProtos.AppendEntries.Entry.Builder.class);
+        }
+
+        // Construct using com.example.raft.MessageProtos.AppendEntries.Entry.newBuilder()
+        private Builder() {
+          maybeForceBuilderInitialization();
+        }
+
+        private Builder(
+            com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+          super(parent);
+          maybeForceBuilderInitialization();
+        }
+        private void maybeForceBuilderInitialization() {
+          if (com.google.protobuf.GeneratedMessageV3
+                  .alwaysUseFieldBuilders) {
+          }
+        }
+        public Builder clear() {
+          super.clear();
+          term_ = 0;
+          bitField0_ = (bitField0_ & ~0x00000001);
+          message_ = "";
+          bitField0_ = (bitField0_ & ~0x00000002);
+          return this;
+        }
+
+        public com.google.protobuf.Descriptors.Descriptor
+            getDescriptorForType() {
+          return com.example.raft.MessageProtos.internal_static_raft_AppendEntries_Entry_descriptor;
+        }
+
+        public com.example.raft.MessageProtos.AppendEntries.Entry getDefaultInstanceForType() {
+          return com.example.raft.MessageProtos.AppendEntries.Entry.getDefaultInstance();
+        }
+
+        public com.example.raft.MessageProtos.AppendEntries.Entry build() {
+          com.example.raft.MessageProtos.AppendEntries.Entry result = buildPartial();
+          if (!result.isInitialized()) {
+            throw newUninitializedMessageException(result);
+          }
+          return result;
+        }
+
+        public com.example.raft.MessageProtos.AppendEntries.Entry buildPartial() {
+          com.example.raft.MessageProtos.AppendEntries.Entry result = new com.example.raft.MessageProtos.AppendEntries.Entry(this);
+          int from_bitField0_ = bitField0_;
+          int to_bitField0_ = 0;
+          if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+            to_bitField0_ |= 0x00000001;
+          }
+          result.term_ = term_;
+          if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+            to_bitField0_ |= 0x00000002;
+          }
+          result.message_ = message_;
+          result.bitField0_ = to_bitField0_;
+          onBuilt();
+          return result;
+        }
+
+        public Builder clone() {
+          return (Builder) super.clone();
+        }
+        public Builder setField(
+            com.google.protobuf.Descriptors.FieldDescriptor field,
+            java.lang.Object value) {
+          return (Builder) super.setField(field, value);
+        }
+        public Builder clearField(
+            com.google.protobuf.Descriptors.FieldDescriptor field) {
+          return (Builder) super.clearField(field);
+        }
+        public Builder clearOneof(
+            com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+          return (Builder) super.clearOneof(oneof);
+        }
+        public Builder setRepeatedField(
+            com.google.protobuf.Descriptors.FieldDescriptor field,
+            int index, java.lang.Object value) {
+          return (Builder) super.setRepeatedField(field, index, value);
+        }
+        public Builder addRepeatedField(
+            com.google.protobuf.Descriptors.FieldDescriptor field,
+            java.lang.Object value) {
+          return (Builder) super.addRepeatedField(field, value);
+        }
+        public Builder mergeFrom(com.google.protobuf.Message other) {
+          if (other instanceof com.example.raft.MessageProtos.AppendEntries.Entry) {
+            return mergeFrom((com.example.raft.MessageProtos.AppendEntries.Entry)other);
+          } else {
+            super.mergeFrom(other);
+            return this;
+          }
+        }
+
+        public Builder mergeFrom(com.example.raft.MessageProtos.AppendEntries.Entry other) {
+          if (other == com.example.raft.MessageProtos.AppendEntries.Entry.getDefaultInstance()) return this;
+          if (other.hasTerm()) {
+            setTerm(other.getTerm());
+          }
+          if (other.hasMessage()) {
+            bitField0_ |= 0x00000002;
+            message_ = other.message_;
+            onChanged();
+          }
+          this.mergeUnknownFields(other.unknownFields);
+          onChanged();
+          return this;
+        }
+
+        public final boolean isInitialized() {
+          if (!hasTerm()) {
+            return false;
+          }
+          if (!hasMessage()) {
+            return false;
+          }
+          return true;
+        }
+
+        public Builder mergeFrom(
+            com.google.protobuf.CodedInputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws java.io.IOException {
+          com.example.raft.MessageProtos.AppendEntries.Entry parsedMessage = null;
+          try {
+            parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+          } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+            parsedMessage = (com.example.raft.MessageProtos.AppendEntries.Entry) e.getUnfinishedMessage();
+            throw e.unwrapIOException();
+          } finally {
+            if (parsedMessage != null) {
+              mergeFrom(parsedMessage);
+            }
+          }
+          return this;
+        }
+        private int bitField0_;
+
+        private int term_ ;
+        /**
+         * <code>required int32 term = 1;</code>
+         */
+        public boolean hasTerm() {
+          return ((bitField0_ & 0x00000001) == 0x00000001);
+        }
+        /**
+         * <code>required int32 term = 1;</code>
+         */
+        public int getTerm() {
+          return term_;
+        }
+        /**
+         * <code>required int32 term = 1;</code>
+         */
+        public Builder setTerm(int value) {
+          bitField0_ |= 0x00000001;
+          term_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>required int32 term = 1;</code>
+         */
+        public Builder clearTerm() {
+          bitField0_ = (bitField0_ & ~0x00000001);
+          term_ = 0;
+          onChanged();
+          return this;
+        }
+
+        private java.lang.Object message_ = "";
+        /**
+         * <code>required string message = 2;</code>
+         */
+        public boolean hasMessage() {
+          return ((bitField0_ & 0x00000002) == 0x00000002);
+        }
+        /**
+         * <code>required string message = 2;</code>
+         */
+        public java.lang.String getMessage() {
+          java.lang.Object ref = message_;
+          if (!(ref instanceof java.lang.String)) {
+            com.google.protobuf.ByteString bs =
+                (com.google.protobuf.ByteString) ref;
+            java.lang.String s = bs.toStringUtf8();
+            if (bs.isValidUtf8()) {
+              message_ = s;
+            }
+            return s;
+          } else {
+            return (java.lang.String) ref;
+          }
+        }
+        /**
+         * <code>required string message = 2;</code>
+         */
+        public com.google.protobuf.ByteString
+            getMessageBytes() {
+          java.lang.Object ref = message_;
+          if (ref instanceof String) {
+            com.google.protobuf.ByteString b = 
+                com.google.protobuf.ByteString.copyFromUtf8(
+                    (java.lang.String) ref);
+            message_ = b;
+            return b;
+          } else {
+            return (com.google.protobuf.ByteString) ref;
+          }
+        }
+        /**
+         * <code>required string message = 2;</code>
+         */
+        public Builder setMessage(
+            java.lang.String value) {
+          if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+          message_ = value;
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>required string message = 2;</code>
+         */
+        public Builder clearMessage() {
+          bitField0_ = (bitField0_ & ~0x00000002);
+          message_ = getDefaultInstance().getMessage();
+          onChanged();
+          return this;
+        }
+        /**
+         * <code>required string message = 2;</code>
+         */
+        public Builder setMessageBytes(
+            com.google.protobuf.ByteString value) {
+          if (value == null) {
+    throw new NullPointerException();
+  }
+  bitField0_ |= 0x00000002;
+          message_ = value;
+          onChanged();
+          return this;
+        }
+        public final Builder setUnknownFields(
+            final com.google.protobuf.UnknownFieldSet unknownFields) {
+          return super.setUnknownFields(unknownFields);
+        }
+
+        public final Builder mergeUnknownFields(
+            final com.google.protobuf.UnknownFieldSet unknownFields) {
+          return super.mergeUnknownFields(unknownFields);
+        }
+
+
+        // @@protoc_insertion_point(builder_scope:raft.AppendEntries.Entry)
+      }
+
+      // @@protoc_insertion_point(class_scope:raft.AppendEntries.Entry)
+      private static final com.example.raft.MessageProtos.AppendEntries.Entry DEFAULT_INSTANCE;
+      static {
+        DEFAULT_INSTANCE = new com.example.raft.MessageProtos.AppendEntries.Entry();
+      }
+
+      public static com.example.raft.MessageProtos.AppendEntries.Entry getDefaultInstance() {
+        return DEFAULT_INSTANCE;
+      }
+
+      @java.lang.Deprecated public static final com.google.protobuf.Parser<Entry>
+          PARSER = new com.google.protobuf.AbstractParser<Entry>() {
+        public Entry parsePartialFrom(
+            com.google.protobuf.CodedInputStream input,
+            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+            throws com.google.protobuf.InvalidProtocolBufferException {
+          return new Entry(input, extensionRegistry);
+        }
+      };
+
+      public static com.google.protobuf.Parser<Entry> parser() {
+        return PARSER;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Parser<Entry> getParserForType() {
+        return PARSER;
+      }
+
+      public com.example.raft.MessageProtos.AppendEntries.Entry getDefaultInstanceForType() {
+        return DEFAULT_INSTANCE;
+      }
+
     }
 
     private int bitField0_;
@@ -290,32 +954,38 @@ public final class MessageProtos {
     }
 
     public static final int ENTRIES_FIELD_NUMBER = 5;
-    private com.google.protobuf.LazyStringList entries_;
+    private java.util.List<com.example.raft.MessageProtos.AppendEntries.Entry> entries_;
     /**
-     * <code>repeated string entries = 5;</code>
+     * <code>repeated .raft.AppendEntries.Entry entries = 5;</code>
      */
-    public com.google.protobuf.ProtocolStringList
-        getEntriesList() {
+    public java.util.List<com.example.raft.MessageProtos.AppendEntries.Entry> getEntriesList() {
       return entries_;
     }
     /**
-     * <code>repeated string entries = 5;</code>
+     * <code>repeated .raft.AppendEntries.Entry entries = 5;</code>
+     */
+    public java.util.List<? extends com.example.raft.MessageProtos.AppendEntries.EntryOrBuilder> 
+        getEntriesOrBuilderList() {
+      return entries_;
+    }
+    /**
+     * <code>repeated .raft.AppendEntries.Entry entries = 5;</code>
      */
     public int getEntriesCount() {
       return entries_.size();
     }
     /**
-     * <code>repeated string entries = 5;</code>
+     * <code>repeated .raft.AppendEntries.Entry entries = 5;</code>
      */
-    public java.lang.String getEntries(int index) {
+    public com.example.raft.MessageProtos.AppendEntries.Entry getEntries(int index) {
       return entries_.get(index);
     }
     /**
-     * <code>repeated string entries = 5;</code>
+     * <code>repeated .raft.AppendEntries.Entry entries = 5;</code>
      */
-    public com.google.protobuf.ByteString
-        getEntriesBytes(int index) {
-      return entries_.getByteString(index);
+    public com.example.raft.MessageProtos.AppendEntries.EntryOrBuilder getEntriesOrBuilder(
+        int index) {
+      return entries_.get(index);
     }
 
     public static final int LEADERCOMMIT_FIELD_NUMBER = 6;
@@ -359,6 +1029,12 @@ public final class MessageProtos {
         memoizedIsInitialized = 0;
         return false;
       }
+      for (int i = 0; i < getEntriesCount(); i++) {
+        if (!getEntries(i).isInitialized()) {
+          memoizedIsInitialized = 0;
+          return false;
+        }
+      }
       memoizedIsInitialized = 1;
       return true;
     }
@@ -378,7 +1054,7 @@ public final class MessageProtos {
         output.writeInt32(4, prevLogTerm_);
       }
       for (int i = 0; i < entries_.size(); i++) {
-        com.google.protobuf.GeneratedMessageV3.writeString(output, 5, entries_.getRaw(i));
+        output.writeMessage(5, entries_.get(i));
       }
       if (((bitField0_ & 0x00000010) == 0x00000010)) {
         output.writeInt32(6, leaderCommit_);
@@ -406,13 +1082,9 @@ public final class MessageProtos {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(4, prevLogTerm_);
       }
-      {
-        int dataSize = 0;
-        for (int i = 0; i < entries_.size(); i++) {
-          dataSize += computeStringSizeNoTag(entries_.getRaw(i));
-        }
-        size += dataSize;
-        size += 1 * getEntriesList().size();
+      for (int i = 0; i < entries_.size(); i++) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(5, entries_.get(i));
       }
       if (((bitField0_ & 0x00000010) == 0x00000010)) {
         size += com.google.protobuf.CodedOutputStream
@@ -621,6 +1293,7 @@ public final class MessageProtos {
       private void maybeForceBuilderInitialization() {
         if (com.google.protobuf.GeneratedMessageV3
                 .alwaysUseFieldBuilders) {
+          getEntriesFieldBuilder();
         }
       }
       public Builder clear() {
@@ -633,8 +1306,12 @@ public final class MessageProtos {
         bitField0_ = (bitField0_ & ~0x00000004);
         prevLogTerm_ = 0;
         bitField0_ = (bitField0_ & ~0x00000008);
-        entries_ = com.google.protobuf.LazyStringArrayList.EMPTY;
-        bitField0_ = (bitField0_ & ~0x00000010);
+        if (entriesBuilder_ == null) {
+          entries_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000010);
+        } else {
+          entriesBuilder_.clear();
+        }
         leaderCommit_ = 0;
         bitField0_ = (bitField0_ & ~0x00000020);
         return this;
@@ -677,11 +1354,15 @@ public final class MessageProtos {
           to_bitField0_ |= 0x00000008;
         }
         result.prevLogTerm_ = prevLogTerm_;
-        if (((bitField0_ & 0x00000010) == 0x00000010)) {
-          entries_ = entries_.getUnmodifiableView();
-          bitField0_ = (bitField0_ & ~0x00000010);
+        if (entriesBuilder_ == null) {
+          if (((bitField0_ & 0x00000010) == 0x00000010)) {
+            entries_ = java.util.Collections.unmodifiableList(entries_);
+            bitField0_ = (bitField0_ & ~0x00000010);
+          }
+          result.entries_ = entries_;
+        } else {
+          result.entries_ = entriesBuilder_.build();
         }
-        result.entries_ = entries_;
         if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
           to_bitField0_ |= 0x00000010;
         }
@@ -742,15 +1423,31 @@ public final class MessageProtos {
         if (other.hasPrevLogTerm()) {
           setPrevLogTerm(other.getPrevLogTerm());
         }
-        if (!other.entries_.isEmpty()) {
-          if (entries_.isEmpty()) {
-            entries_ = other.entries_;
-            bitField0_ = (bitField0_ & ~0x00000010);
-          } else {
-            ensureEntriesIsMutable();
-            entries_.addAll(other.entries_);
+        if (entriesBuilder_ == null) {
+          if (!other.entries_.isEmpty()) {
+            if (entries_.isEmpty()) {
+              entries_ = other.entries_;
+              bitField0_ = (bitField0_ & ~0x00000010);
+            } else {
+              ensureEntriesIsMutable();
+              entries_.addAll(other.entries_);
+            }
+            onChanged();
           }
-          onChanged();
+        } else {
+          if (!other.entries_.isEmpty()) {
+            if (entriesBuilder_.isEmpty()) {
+              entriesBuilder_.dispose();
+              entriesBuilder_ = null;
+              entries_ = other.entries_;
+              bitField0_ = (bitField0_ & ~0x00000010);
+              entriesBuilder_ = 
+                com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders ?
+                   getEntriesFieldBuilder() : null;
+            } else {
+              entriesBuilder_.addAllMessages(other.entries_);
+            }
+          }
         }
         if (other.hasLeaderCommit()) {
           setLeaderCommit(other.getLeaderCommit());
@@ -775,6 +1472,11 @@ public final class MessageProtos {
         }
         if (!hasLeaderCommit()) {
           return false;
+        }
+        for (int i = 0; i < getEntriesCount(); i++) {
+          if (!getEntries(i).isInitialized()) {
+            return false;
+          }
         }
         return true;
       }
@@ -970,97 +1672,244 @@ public final class MessageProtos {
         return this;
       }
 
-      private com.google.protobuf.LazyStringList entries_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+      private java.util.List<com.example.raft.MessageProtos.AppendEntries.Entry> entries_ =
+        java.util.Collections.emptyList();
       private void ensureEntriesIsMutable() {
         if (!((bitField0_ & 0x00000010) == 0x00000010)) {
-          entries_ = new com.google.protobuf.LazyStringArrayList(entries_);
+          entries_ = new java.util.ArrayList<com.example.raft.MessageProtos.AppendEntries.Entry>(entries_);
           bitField0_ |= 0x00000010;
          }
       }
+
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+          com.example.raft.MessageProtos.AppendEntries.Entry, com.example.raft.MessageProtos.AppendEntries.Entry.Builder, com.example.raft.MessageProtos.AppendEntries.EntryOrBuilder> entriesBuilder_;
+
       /**
-       * <code>repeated string entries = 5;</code>
+       * <code>repeated .raft.AppendEntries.Entry entries = 5;</code>
        */
-      public com.google.protobuf.ProtocolStringList
-          getEntriesList() {
-        return entries_.getUnmodifiableView();
+      public java.util.List<com.example.raft.MessageProtos.AppendEntries.Entry> getEntriesList() {
+        if (entriesBuilder_ == null) {
+          return java.util.Collections.unmodifiableList(entries_);
+        } else {
+          return entriesBuilder_.getMessageList();
+        }
       }
       /**
-       * <code>repeated string entries = 5;</code>
+       * <code>repeated .raft.AppendEntries.Entry entries = 5;</code>
        */
       public int getEntriesCount() {
-        return entries_.size();
+        if (entriesBuilder_ == null) {
+          return entries_.size();
+        } else {
+          return entriesBuilder_.getCount();
+        }
       }
       /**
-       * <code>repeated string entries = 5;</code>
+       * <code>repeated .raft.AppendEntries.Entry entries = 5;</code>
        */
-      public java.lang.String getEntries(int index) {
-        return entries_.get(index);
+      public com.example.raft.MessageProtos.AppendEntries.Entry getEntries(int index) {
+        if (entriesBuilder_ == null) {
+          return entries_.get(index);
+        } else {
+          return entriesBuilder_.getMessage(index);
+        }
       }
       /**
-       * <code>repeated string entries = 5;</code>
-       */
-      public com.google.protobuf.ByteString
-          getEntriesBytes(int index) {
-        return entries_.getByteString(index);
-      }
-      /**
-       * <code>repeated string entries = 5;</code>
+       * <code>repeated .raft.AppendEntries.Entry entries = 5;</code>
        */
       public Builder setEntries(
-          int index, java.lang.String value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  ensureEntriesIsMutable();
-        entries_.set(index, value);
-        onChanged();
+          int index, com.example.raft.MessageProtos.AppendEntries.Entry value) {
+        if (entriesBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureEntriesIsMutable();
+          entries_.set(index, value);
+          onChanged();
+        } else {
+          entriesBuilder_.setMessage(index, value);
+        }
         return this;
       }
       /**
-       * <code>repeated string entries = 5;</code>
+       * <code>repeated .raft.AppendEntries.Entry entries = 5;</code>
+       */
+      public Builder setEntries(
+          int index, com.example.raft.MessageProtos.AppendEntries.Entry.Builder builderForValue) {
+        if (entriesBuilder_ == null) {
+          ensureEntriesIsMutable();
+          entries_.set(index, builderForValue.build());
+          onChanged();
+        } else {
+          entriesBuilder_.setMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .raft.AppendEntries.Entry entries = 5;</code>
+       */
+      public Builder addEntries(com.example.raft.MessageProtos.AppendEntries.Entry value) {
+        if (entriesBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureEntriesIsMutable();
+          entries_.add(value);
+          onChanged();
+        } else {
+          entriesBuilder_.addMessage(value);
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .raft.AppendEntries.Entry entries = 5;</code>
        */
       public Builder addEntries(
-          java.lang.String value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  ensureEntriesIsMutable();
-        entries_.add(value);
-        onChanged();
+          int index, com.example.raft.MessageProtos.AppendEntries.Entry value) {
+        if (entriesBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          ensureEntriesIsMutable();
+          entries_.add(index, value);
+          onChanged();
+        } else {
+          entriesBuilder_.addMessage(index, value);
+        }
         return this;
       }
       /**
-       * <code>repeated string entries = 5;</code>
+       * <code>repeated .raft.AppendEntries.Entry entries = 5;</code>
+       */
+      public Builder addEntries(
+          com.example.raft.MessageProtos.AppendEntries.Entry.Builder builderForValue) {
+        if (entriesBuilder_ == null) {
+          ensureEntriesIsMutable();
+          entries_.add(builderForValue.build());
+          onChanged();
+        } else {
+          entriesBuilder_.addMessage(builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .raft.AppendEntries.Entry entries = 5;</code>
+       */
+      public Builder addEntries(
+          int index, com.example.raft.MessageProtos.AppendEntries.Entry.Builder builderForValue) {
+        if (entriesBuilder_ == null) {
+          ensureEntriesIsMutable();
+          entries_.add(index, builderForValue.build());
+          onChanged();
+        } else {
+          entriesBuilder_.addMessage(index, builderForValue.build());
+        }
+        return this;
+      }
+      /**
+       * <code>repeated .raft.AppendEntries.Entry entries = 5;</code>
        */
       public Builder addAllEntries(
-          java.lang.Iterable<java.lang.String> values) {
-        ensureEntriesIsMutable();
-        com.google.protobuf.AbstractMessageLite.Builder.addAll(
-            values, entries_);
-        onChanged();
+          java.lang.Iterable<? extends com.example.raft.MessageProtos.AppendEntries.Entry> values) {
+        if (entriesBuilder_ == null) {
+          ensureEntriesIsMutable();
+          com.google.protobuf.AbstractMessageLite.Builder.addAll(
+              values, entries_);
+          onChanged();
+        } else {
+          entriesBuilder_.addAllMessages(values);
+        }
         return this;
       }
       /**
-       * <code>repeated string entries = 5;</code>
+       * <code>repeated .raft.AppendEntries.Entry entries = 5;</code>
        */
       public Builder clearEntries() {
-        entries_ = com.google.protobuf.LazyStringArrayList.EMPTY;
-        bitField0_ = (bitField0_ & ~0x00000010);
-        onChanged();
+        if (entriesBuilder_ == null) {
+          entries_ = java.util.Collections.emptyList();
+          bitField0_ = (bitField0_ & ~0x00000010);
+          onChanged();
+        } else {
+          entriesBuilder_.clear();
+        }
         return this;
       }
       /**
-       * <code>repeated string entries = 5;</code>
+       * <code>repeated .raft.AppendEntries.Entry entries = 5;</code>
        */
-      public Builder addEntriesBytes(
-          com.google.protobuf.ByteString value) {
-        if (value == null) {
-    throw new NullPointerException();
-  }
-  ensureEntriesIsMutable();
-        entries_.add(value);
-        onChanged();
+      public Builder removeEntries(int index) {
+        if (entriesBuilder_ == null) {
+          ensureEntriesIsMutable();
+          entries_.remove(index);
+          onChanged();
+        } else {
+          entriesBuilder_.remove(index);
+        }
         return this;
+      }
+      /**
+       * <code>repeated .raft.AppendEntries.Entry entries = 5;</code>
+       */
+      public com.example.raft.MessageProtos.AppendEntries.Entry.Builder getEntriesBuilder(
+          int index) {
+        return getEntriesFieldBuilder().getBuilder(index);
+      }
+      /**
+       * <code>repeated .raft.AppendEntries.Entry entries = 5;</code>
+       */
+      public com.example.raft.MessageProtos.AppendEntries.EntryOrBuilder getEntriesOrBuilder(
+          int index) {
+        if (entriesBuilder_ == null) {
+          return entries_.get(index);  } else {
+          return entriesBuilder_.getMessageOrBuilder(index);
+        }
+      }
+      /**
+       * <code>repeated .raft.AppendEntries.Entry entries = 5;</code>
+       */
+      public java.util.List<? extends com.example.raft.MessageProtos.AppendEntries.EntryOrBuilder> 
+           getEntriesOrBuilderList() {
+        if (entriesBuilder_ != null) {
+          return entriesBuilder_.getMessageOrBuilderList();
+        } else {
+          return java.util.Collections.unmodifiableList(entries_);
+        }
+      }
+      /**
+       * <code>repeated .raft.AppendEntries.Entry entries = 5;</code>
+       */
+      public com.example.raft.MessageProtos.AppendEntries.Entry.Builder addEntriesBuilder() {
+        return getEntriesFieldBuilder().addBuilder(
+            com.example.raft.MessageProtos.AppendEntries.Entry.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .raft.AppendEntries.Entry entries = 5;</code>
+       */
+      public com.example.raft.MessageProtos.AppendEntries.Entry.Builder addEntriesBuilder(
+          int index) {
+        return getEntriesFieldBuilder().addBuilder(
+            index, com.example.raft.MessageProtos.AppendEntries.Entry.getDefaultInstance());
+      }
+      /**
+       * <code>repeated .raft.AppendEntries.Entry entries = 5;</code>
+       */
+      public java.util.List<com.example.raft.MessageProtos.AppendEntries.Entry.Builder> 
+           getEntriesBuilderList() {
+        return getEntriesFieldBuilder().getBuilderList();
+      }
+      private com.google.protobuf.RepeatedFieldBuilderV3<
+          com.example.raft.MessageProtos.AppendEntries.Entry, com.example.raft.MessageProtos.AppendEntries.Entry.Builder, com.example.raft.MessageProtos.AppendEntries.EntryOrBuilder> 
+          getEntriesFieldBuilder() {
+        if (entriesBuilder_ == null) {
+          entriesBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<
+              com.example.raft.MessageProtos.AppendEntries.Entry, com.example.raft.MessageProtos.AppendEntries.Entry.Builder, com.example.raft.MessageProtos.AppendEntries.EntryOrBuilder>(
+                  entries_,
+                  ((bitField0_ & 0x00000010) == 0x00000010),
+                  getParentForChildren(),
+                  isClean());
+          entries_ = null;
+        }
+        return entriesBuilder_;
       }
 
       private int leaderCommit_ ;
@@ -3160,6 +4009,11 @@ public final class MessageProtos {
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_raft_AppendEntries_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_raft_AppendEntries_Entry_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_raft_AppendEntries_Entry_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_raft_AppendEntriesResponse_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
@@ -3183,16 +4037,18 @@ public final class MessageProtos {
       descriptor;
   static {
     java.lang.String[] descriptorData = {
-      "\n\016Messages.proto\022\004raft\"\201\001\n\rAppendEntries" +
+      "\n\016Messages.proto\022\004raft\"\304\001\n\rAppendEntries" +
       "\022\014\n\004term\030\001 \002(\005\022\020\n\010leaderId\030\002 \002(\t\022\024\n\014prev" +
-      "LogIndex\030\003 \002(\005\022\023\n\013prevLogTerm\030\004 \002(\005\022\017\n\007e" +
-      "ntries\030\005 \003(\t\022\024\n\014leaderCommit\030\006 \002(\005\"6\n\025Ap" +
-      "pendEntriesResponse\022\014\n\004term\030\001 \002(\005\022\017\n\007suc" +
-      "cess\030\002 \002(\010\"[\n\013RequestVote\022\014\n\004term\030\001 \002(\005\022" +
-      "\023\n\013candidateId\030\002 \002(\t\022\024\n\014lastLogIndex\030\003 \002" +
-      "(\005\022\023\n\013lastLogTerm\030\004 \002(\005\"8\n\023RequestVoteRe" +
-      "sponse\022\014\n\004term\030\001 \002(\005\022\023\n\013voteGranted\030\002 \002(" +
-      "\010B!\n\020com.example.raftB\rMessageProtos"
+      "LogIndex\030\003 \002(\005\022\023\n\013prevLogTerm\030\004 \002(\005\022*\n\007e" +
+      "ntries\030\005 \003(\0132\031.raft.AppendEntries.Entry\022" +
+      "\024\n\014leaderCommit\030\006 \002(\005\032&\n\005Entry\022\014\n\004term\030\001" +
+      " \002(\005\022\017\n\007message\030\002 \002(\t\"6\n\025AppendEntriesRe" +
+      "sponse\022\014\n\004term\030\001 \002(\005\022\017\n\007success\030\002 \002(\010\"[\n" +
+      "\013RequestVote\022\014\n\004term\030\001 \002(\005\022\023\n\013candidateI" +
+      "d\030\002 \002(\t\022\024\n\014lastLogIndex\030\003 \002(\005\022\023\n\013lastLog" +
+      "Term\030\004 \002(\005\"8\n\023RequestVoteResponse\022\014\n\004ter" +
+      "m\030\001 \002(\005\022\023\n\013voteGranted\030\002 \002(\010B!\n\020com.exam" +
+      "ple.raftB\rMessageProtos"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -3212,6 +4068,12 @@ public final class MessageProtos {
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_raft_AppendEntries_descriptor,
         new java.lang.String[] { "Term", "LeaderId", "PrevLogIndex", "PrevLogTerm", "Entries", "LeaderCommit", });
+    internal_static_raft_AppendEntries_Entry_descriptor =
+      internal_static_raft_AppendEntries_descriptor.getNestedTypes().get(0);
+    internal_static_raft_AppendEntries_Entry_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_raft_AppendEntries_Entry_descriptor,
+        new java.lang.String[] { "Term", "Message", });
     internal_static_raft_AppendEntriesResponse_descriptor =
       getDescriptor().getMessageTypes().get(1);
     internal_static_raft_AppendEntriesResponse_fieldAccessorTable = new

@@ -1,6 +1,6 @@
 import java.util.Scanner;
 
-public class ClientHandler extends Thread {
+public class ClientHandler implements Runnable {
 
     Scanner scan;
     Node node;
@@ -13,7 +13,7 @@ public class ClientHandler extends Thread {
     @Override
     public void run() {
         while (true) {
-            node.addToQueue(new QueueEntry(1, scan.next()));
+            node.addToQueue(new QueueEntry(QueueEntry.Type.Input, scan.next()));
         }
     }
 }

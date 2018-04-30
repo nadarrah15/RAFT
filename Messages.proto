@@ -11,8 +11,14 @@ message AppendEntries
     required string leaderId = 2;
     required int32 prevLogIndex = 3;
     required int32 prevLogTerm = 4;
-    repeated string entries = 5;
+    repeated Entry entries = 5;
     required int32 leaderCommit = 6;
+
+    message Entry
+    {
+        required int32 term = 1;
+        required string message = 2;
+    }
 }
 
 message AppendEntriesResponse

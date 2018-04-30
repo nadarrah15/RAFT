@@ -1,10 +1,7 @@
 import com.example.raft.MessageProtos;
 import com.google.protobuf.GeneratedMessageV3;
 
-import java.io.BufferedOutputStream;
-import java.io.IOException;
-import java.io.ObjectOutputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.Inet4Address;
 import java.net.UnknownHostException;
 import java.util.*;
@@ -79,14 +76,14 @@ public class Node {
         int timeout = rand.nextInt(150) + 150;
 
         try {
-
             // Loop through performFollower operations
             while (true) {
                 Runnable r = () -> {
                     if (commitIndex > lastApplied) {
                         lastApplied++;
-                        //TODO Implement applying to log
-                        // apply(log.get(lastApplied))
+                        //TODO Implement applying to state machine
+                        apply(log.get(lastApplied));
+
                     }
                     // Check taskQueue
                     QueueEntry task = taskQueue.remove();
@@ -115,6 +112,8 @@ public class Node {
                                             appendEntriesResponse = MessageProtos.AppendEntriesResponse.newBuilder().setSuccess(false).setTerm(currentTerm).build();
                                         } else {
                                             // Prepare success response
+                                            // Update currentTerm if necessary
+                                            currentTerm = appendEntries.getTerm();
                                             appendEntriesResponse = MessageProtos.AppendEntriesResponse.newBuilder().setSuccess(true).setTerm(currentTerm).build();
 
                                             if (appendEntries.getEntriesCount() < 1) {
@@ -147,6 +146,8 @@ public class Node {
                                                 requestVote.getLastLogIndex() >= log.size() - 1 &&
                                                 requestVote.getLastLogTerm() >= log.get(log.size() - 1).term) {
                                             // Prepare to grant vote
+                                            // Update currentTerm if necessary
+                                            currentTerm = requestVote.getTerm();
                                             requestVoteResponse = MessageProtos.RequestVoteResponse.newBuilder().setVoteGranted(true).setTerm(currentTerm).build();
                                             votedFor = requestVote.getCandidateId();
                                         } else {
@@ -258,11 +259,10 @@ public class Node {
 
         // Loop through performLeader operations
         while (true) {
-
             if (commitIndex > lastApplied) {
                 lastApplied++;
-                //TODO Implement applying to log
-                // apply(log.get(lastApplied))
+                //TODO Implement applying to state machine
+                apply(log.get(lastApplied));
             }
 
             //TODO Check if in-queue and out-queue are empty
@@ -295,5 +295,23 @@ public class Node {
     private Message getMessage() {
         //TODO: implement
         return null;
+    }
+
+    private boolean apply(LogEntry entry) {
+        Scanner scan = new Scanner(entry.command);
+        // TODO Error handling
+        switch (scan.next().toLowerCase()) {
+            case "append":
+                database.concat(scan.next());
+                break;
+            case "delete":
+                int start = scan.nextInt();
+                database.substring(0, database.length() - start);
+                break;
+            default:
+                return false;
+        }
+
+        return true;
     }
 }

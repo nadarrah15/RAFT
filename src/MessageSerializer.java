@@ -18,16 +18,16 @@ public class MessageSerializer implements NetSerializer {
             // Return if type invalid
             switch (type) {
                 case 0:
-                    message = new Message(true, Message.Type.AppendEntries, MessageProtos.AppendEntries.parseFrom(data));
+                    message = new Message(null, Message.Type.AppendEntries, MessageProtos.AppendEntries.parseFrom(data));
                     break;
                 case 1:
-                    message = new Message(true, Message.Type.AppendEntriesResponse, MessageProtos.AppendEntries.parseFrom(data));
+                    message = new Message(null, Message.Type.AppendEntriesResponse, MessageProtos.AppendEntries.parseFrom(data));
                     break;
                 case 2:
-                    message = new Message(true, Message.Type.RequestVote, MessageProtos.AppendEntries.parseFrom(data));
+                    message = new Message(null, Message.Type.RequestVote, MessageProtos.AppendEntries.parseFrom(data));
                     break;
                 case 3:
-                    message = new Message(true, Message.Type.RequestVoteResponse, MessageProtos.AppendEntries.parseFrom(data));
+                    message = new Message(null, Message.Type.RequestVoteResponse, MessageProtos.AppendEntries.parseFrom(data));
                     break;
                 default:
                     return false;

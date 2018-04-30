@@ -32,7 +32,6 @@ public class Net {
 
                             dis.readFully(data);
                             serializer.receive(type, data);
-
                             clientSocket.close();
                         } catch (IOException e) {
                             e.printStackTrace();

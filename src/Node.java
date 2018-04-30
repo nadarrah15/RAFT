@@ -26,6 +26,7 @@ public class Node {
     private State state; // Defines follower, candidate, or leader state
     private Net net;
     private Queue<QueueEntry> taskQueue;    //TODO: Reply to 'What is this?'
+    private String database;
 
     //TODO implement LinkedHashMap of threads handling interaction with other nodes
     // A: Dedicate one thread to receiving all messages, one per node for sending messages?
@@ -46,6 +47,7 @@ public class Node {
         state = State.FOLLOWER; // Begin life as Follower
         net = new Net(new MessageSerializer(this));
         taskQueue = new ConcurrentLinkedQueue<>();
+        database = "";
 
         ClientHandler clientHandler = new ClientHandler(this); // Start new thread for console (local client) input
         new Thread(clientHandler).start();
@@ -77,15 +79,15 @@ public class Node {
         int timeout = rand.nextInt(150) + 150;
 
         try {
-            Runnable r = () -> {
-                if (commitIndex > lastApplied) {
-                    lastApplied++;
-                    //TODO Implement applying to log
-                    // apply(log.get(lastApplied))
-                }
 
-                // Loop through performFollower operations
-                while (true) {
+            // Loop through performFollower operations
+            while (true) {
+                Runnable r = () -> {
+                    if (commitIndex > lastApplied) {
+                        lastApplied++;
+                        //TODO Implement applying to log
+                        // apply(log.get(lastApplied))
+                    }
                     // Check taskQueue
                     QueueEntry task = taskQueue.remove();
                     // Check entry type
@@ -101,7 +103,7 @@ public class Node {
                             if (message.isIncoming()) {
                                 // Process message
                                 switch (message.getType()) {
-                                    case AppendEntriesResponse:
+                                    case AppendEntries:
                                         MessageProtos.AppendEntries appendEntries = (MessageProtos.AppendEntries) message.getBody();
                                         MessageProtos.AppendEntriesResponse appendEntriesResponse;
 
@@ -117,30 +119,25 @@ public class Node {
 
                                             if (appendEntries.getEntriesCount() < 1) {
                                                 // If entries[] is empty, acknowledge message as heartbeat
-                                                //Reset timer
+                                                //Reset timer by returning
+                                                return;
                                             } else {
                                                 // If existing entry conflicts with new one (same index, different terms), delete existing entry and all that follow
                                                 for (int start = appendEntries.getPrevLogIndex() + 1; log.size() > start; ) {
                                                     log.remove(start);
                                                 }
-
                                                 // Append new entries to log
                                                 for (int i = 0; i < appendEntries.getEntriesCount(); i++) {
                                                     MessageProtos.AppendEntries.Entry entry = appendEntries.getEntries(i);
                                                     log.add(new LogEntry(entry.getTerm(), entry.getMessage()));
                                                 }
                                             }
-
                                         }
-
-                                        byte[] data = appendEntriesResponse.toByteArray();
-
-                                        // Call Net object to actually send message across sockets
-                                        net.send(appendEntries.getLeaderId(), PORT, 1, data.length, data);
-
+                                        // Add pending response to task queue
+                                        taskQueue.add(new QueueEntry(QueueEntry.Type.Message, new Message(appendEntries.getLeaderId(), Message.Type.AppendEntriesResponse, appendEntriesResponse)));
                                         break;
 
-                                    case RequestVoteResponse:
+                                    case RequestVote:
                                         MessageProtos.RequestVote requestVote = (MessageProtos.RequestVote) message.getBody();
                                         MessageProtos.RequestVoteResponse requestVoteResponse;
 
@@ -151,36 +148,44 @@ public class Node {
                                                 requestVote.getLastLogTerm() >= log.get(log.size() - 1).term) {
                                             // Prepare to grant vote
                                             requestVoteResponse = MessageProtos.RequestVoteResponse.newBuilder().setVoteGranted(true).setTerm(currentTerm).build();
+                                            votedFor = requestVote.getCandidateId();
                                         } else {
                                             // Prepare to deny vote
                                             requestVoteResponse = MessageProtos.RequestVoteResponse.newBuilder().setVoteGranted(false).setTerm(currentTerm).build();
-                                            votedFor = requestVote.getCandidateId();
                                         }
-
-                                        data = requestVoteResponse.toByteArray();
-
-                                        // Call Net object to actually send message across sockets
-                                        net.send(requestVote.getCandidateId(), PORT, 3, data.length, data);
-
+                                        // Add pending response to task queue
+                                        taskQueue.add(new QueueEntry(QueueEntry.Type.Message, new Message(requestVote.getCandidateId(), Message.Type.RequestVoteResponse, requestVoteResponse)));
                                         break;
-                                    // Ignore AppendEntries, RequestVote tasks as follower
+                                    // Ignore incoming AppendEntriesResponse, RequestVoteResponse tasks as follower
                                 }
                             } else {
-                                // Send message to leader node
+                                // If message is outgoing, send response
+                                switch (message.getType()) {
+                                    case AppendEntriesResponse:
+                                        MessageProtos.AppendEntriesResponse appendEntriesResponse = (MessageProtos.AppendEntriesResponse) message.getBody();
+                                        byte[] data = appendEntriesResponse.toByteArray();
+                                        // Call Net object to actually send message across sockets
+                                        net.send(message.getRecipient(), PORT, 1, data.length, data);
+                                        break;
+                                    case RequestVoteResponse:
+                                        MessageProtos.RequestVoteResponse requestVoteResponse = (MessageProtos.RequestVoteResponse) message.getBody();
+                                        data = requestVoteResponse.toByteArray();
+                                        // Call Net object to actually send message across sockets
+                                        net.send(message.getRecipient(), PORT, 3, data.length, data);
+                                        break;
+                                    // Ignore outgoing AppendEntries, RequestVote tasks as follower
+                                }
                             }
                     }
+                };
 
-                    break;
-                }
-            };
-
-
-            Future<?> f = service.submit(r);
-            // Run thread; throws TimeoutException if thread completion exceeds timeout
-            // Thread completes operations regardless of TimeoutException
-            f.get(timeout, TimeUnit.MILLISECONDS);
-
+                Future<?> f = service.submit(r);
+                // Run thread; throws TimeoutException if thread completion exceeds timeout
+                // Thread completes operations regardless of TimeoutException
+                f.get(timeout, TimeUnit.MILLISECONDS);
+            }
         } catch (TimeoutException | InterruptedException | ExecutionException e) {
+            // Only leave follower status if election timer exceeded
             e.printStackTrace();
         }
 

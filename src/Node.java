@@ -12,6 +12,8 @@ import java.util.concurrent.*;
 
 public class Node {
 
+    final int PORT = 6666;
+
     private Random rand = new Random();
     ExecutorService service = Executors.newSingleThreadExecutor();  //TODO: Reply to 'What is this?'
     private HashSet<String> ipSet; // Stores IP addresses of fellow nodes
@@ -81,47 +83,6 @@ public class Node {
         //TODO Implement timer
         // Loop through performFollower operations
         while (true) {
-
-            /*
-            try {
-                //Create Single-Thread for listener
-                Runnable r = () -> {
-                        Message message = incoming message;
-                        switch(message.getType()){
-                            case AppendEntries:
-                                if(AppendEntry.term > currentTerm)
-                                    currentTerm = AppendEntry.term;
-                                if(message.getBody().term < currentTerm)
-                                    return new AppendEntryResponse(false);
-                                if(prevLogIndex >= log.size() || log.get(prevLogIndex).getTerm() != prevLogTerm)
-                                    return new AppendEntryResponse(false);
-                                if(log.get(prevLogIndex).getTerm() != prevLogTerm){
-                                    log.removeRange(prevLogIndex, log.size());
-                                for(all entries in AppendEntries)
-                                    log.add(entry);
-                                if(leaderCommit > commitIndex){
-                                    commitIndex = min(leaderCommit, log.get(log.size() - 1).index);
-                                return new AppendEntryResponse(true);
-                            case RequestVote:
-                                if(term < currentTerm)
-                                    return new RequestVoteResponse(false);
-                                if((votedFor == null || votedFor == candidateId) && log is up to date)
-                                    return new RequestVoteResponse(true);
-                };
-
-                Future<?> f = service.submit(r);
-                f.get(timeout, TimeUnit.MILLISECONDS);
-            } catch (TimeoutException e) {
-                return State.CANDIDATE;
-            } catch (InterruptedException e) {
-                System.out.println("Something Went Wrong In Execution");
-            } catch (ExecutionException e) {
-                System.out.println("Error in Entry Handling");
-            }
-
-            break;
-           */
-
             // Check taskQueue
             QueueEntry task = taskQueue.remove();
             // Check entry type
@@ -172,7 +133,7 @@ public class Node {
                                 byte[] data = appendEntriesResponse.toByteArray();
 
                                 // Call Net object to actually send message across sockets
-                                net.send(appendEntries.getLeaderId(), 1, data.length, data);
+                                net.send(appendEntries.getLeaderId(), PORT,1, data.length, data);
 
                                 break;
 
@@ -196,7 +157,7 @@ public class Node {
                                 data = requestVoteResponse.toByteArray();
 
                                 // Call Net object to actually send message across sockets
-                                net.send(requestVote.getCandidateId(), 3, data.length, data);
+                                net.send(requestVote.getCandidateId(), PORT,3, data.length, data);
 
                                 break;
                             // Ignore AppendEntries, RequestVote tasks as follower

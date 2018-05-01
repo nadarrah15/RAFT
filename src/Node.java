@@ -36,6 +36,7 @@ public class Node {
     }
 
     public Node(HashSet<String> ipSet) throws UnknownHostException {
+        System.out.println("[NODE] Constructing");
         this.ipSet = ipSet; // Store IP addresses in .txt file
         currentTerm = 0;
         id = Inet4Address.getLocalHost().getHostAddress();
@@ -46,22 +47,26 @@ public class Node {
         taskQueue = new ConcurrentLinkedQueue<>();
         database = "";
 
+        System.out.println("[NODE] Starting ClientHandler");
         ClientHandler clientHandler = new ClientHandler(this); // Start new thread for console (local client) input
         new Thread(clientHandler).start();
     }
 
     public void run() {
-
+        System.out.println("[NODE] Switching state");
         // Commence lifetime operations
         while (true) {
             switch (state) {
                 case FOLLOWER:
+                    System.out.println("[NODE] State -> follower");
                     state = performFollower();
                     break;
                 case CANDIDATE:
+                    System.out.println("[NODE] State -> candidate");
                     state = performCandidate();
                     break;
                 case LEADER:
+                    System.out.println("[NODE] State -> leader");
                     state = performLeader();
                     break;
             }
@@ -183,6 +188,7 @@ public class Node {
                 Future<?> f = service.submit(r);
                 // Run thread; throws TimeoutException if thread completion exceeds timeout
                 // Thread completes operations regardless of TimeoutException
+                // Future.get() blocks
                 f.get(timeout, TimeUnit.MILLISECONDS);
             }
         } catch (TimeoutException | InterruptedException | ExecutionException e) {

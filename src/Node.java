@@ -80,7 +80,6 @@ public class Node {
     private State performFollower() {
 
         int timeout = rand.nextInt(150) + 150;
-
         try {
             // Loop through performFollower operations
             while (true) {
@@ -265,6 +264,7 @@ public class Node {
         }
 
         // Loop through performLeader operations
+        sendAll(MessageProtos.AppendEntries.newBuilder().build());
         while (true) {
             if (commitIndex > lastApplied) {
                 lastApplied++;
@@ -272,25 +272,39 @@ public class Node {
                 apply(log.get(lastApplied));
             }
 
-            //TODO Check if in-queue and out-queue are empty
-            /*
-            if (client input queue has something) {
-                send AppendEntries RPC
-                reset timer
-            } else if (RPC queue has something) {
-                respond appropriately
-            } else if (RPC Response queue has something) {
-                respond appropriately
-            } else {
-                send heartbeat
+            if (!taskQueue.isEmpty()) {
+                QueueEntry entry = taskQueue.remove();
+                // Check entry type
+                switch (entry.getType()) {
+                    case Input:
+                        //Process Client Command
+                        break;
+
+                    case Message:
+                        Message message = (Message) entry.getBody();
+                        // Check if message is ingoing or outgoing
+                        if (message.isIncoming()) {
+                            // Process message
+                            switch (message.getType()) {
+                                case AppendEntries:
+                                    com.google.protobuf.GeneratedMessageV3 appendEntries = message.getBody();
+                                    sendAll(appendEntries);
+                                    break;
+                                case RequestVote:
+                                    //Process RequestVotes
+                            }
+                        } else {
+                            sendAll(MessageProtos.AppendEntries.newBuilder().build());
+                        }
+
+
+                        //TODO replace with further implementation
+                        break;
+                }
+
+                return State.FOLLOWER;
             }
-            */
-
-            //TODO replace with further implementation
-            break;
         }
-
-        return State.FOLLOWER;
     }
 
     // sends message to all nodes

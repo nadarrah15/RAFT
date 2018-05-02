@@ -30,6 +30,7 @@ public class Node {
     // B: Have each thread can contain server socket and client socket for one-way connections?
     // C: Dedicate one thread to receiving all messages, one per node for sending messages?
 
+
     // Conveys node state
     private enum State {
         FOLLOWER, CANDIDATE, LEADER

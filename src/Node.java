@@ -78,6 +78,7 @@ public class Node {
     }
 
     private State performFollower() {
+
         int timeout = rand.nextInt(150) + 150;
 
         try {

@@ -236,7 +236,7 @@ public class Node {
 
             //determine message type
             if(entry != null){
-                Message message = (Message) entry.getBody();
+                message = (Message) entry.getBody();
                 switch (message.getType()) {
                     case AppendEntries:
                         MessageProtos.AppendEntries appendMessage = (MessageProtos.AppendEntries) message.getBody();

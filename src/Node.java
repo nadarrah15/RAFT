@@ -12,9 +12,9 @@ public class Node {
     final int PORT = 6666;
 
     private Random rand = new Random();
-    ExecutorService service = Executors.newSingleThreadExecutor();  //TODO: Reply to 'What is this?'
+    ExecutorService service = Executors.newSingleThreadExecutor();  //TODO: Write description
     private HashSet<String> ipSet; // Stores IP addresses of fellow nodes
-    private String id;         // nodes ID
+    private String id;         // nodes ID TODO: never instantiated
     private int currentTerm; // Latest term server has seen (initialized to 0 on first boot)
     private String votedFor; // Stores candidateId that received vote in current term (or null if none)
     private ArrayList<LogEntry> log; // Stores log entries
@@ -24,6 +24,7 @@ public class Node {
     private Net net;
     private Queue<QueueEntry> taskQueue;    //TODO: Reply to 'What is this?'
     private String database;
+
 
     //TODO implement LinkedHashMap of threads handling interaction with other nodes
     // A: Dedicate one thread to receiving all messages, one per node for sending messages?
@@ -42,6 +43,7 @@ public class Node {
         id = Inet4Address.getLocalHost().getHostAddress();
         commitIndex = 0;
         lastApplied = 0;
+        taskQueue = new ConcurrentLinkedQueue<QueueEntry>();
         state = State.FOLLOWER; // Begin life as Follower
         net = new Net(new MessageSerializer(this));
         taskQueue = new ConcurrentLinkedQueue<>();
@@ -225,24 +227,37 @@ public class Node {
                 break;
 
             //Receive either a heartbeat or a vote
-            if (taskQueue.size() != 0)
-                message = (Message) taskQueue.poll().getBody();     //TODO: resolve issues
-        }
+            QueueEntry entry = taskQueue.poll();
 
+            /*
+            if(!message.isIncoming())
+                This isn't possible, change_my_mind_meme.jpg
+             */
 
-        switch (message.getType()) {
-            case AppendEntries:
-                //if (message.getTerm >= currentTerm){
-                taskQueue.add(new QueueEntry(QueueEntry.Type.Message, message.getBody()));     //TODO: resolve issues
-                return State.FOLLOWER;
-            //}
-            //break;
-            case RequestVoteResponse:
-                //if(message.getVoteGranted()){
-                numVotes++;
-                if (numVotes > ipSet.size() / 2)
-                    return State.LEADER;
-                break;
+            //determine message type
+            if(entry != null){
+                Message message = (Message) entry.getBody();
+                switch (message.getType()) {
+                    case AppendEntries:
+                        MessageProtos.AppendEntries appendMessage = (MessageProtos.AppendEntries) message.getBody();
+                        //check to see if this is the real leader
+                        if (appendMessage.getTerm() >= currentTerm){
+                            addToFront(entry);
+                            return State.FOLLOWER;
+                        }
+                        break;
+                    case RequestVoteResponse:
+                        MessageProtos.RequestVoteResponse response = (MessageProtos.RequestVoteResponse) message.getBody();
+                        if(response.getVoteGranted()) {
+                            numVotes++;
+                            start = System.currentTimeMillis();
+                            //check if we have majority
+                            if (numVotes > ipSet.size() / 2)
+                                return State.LEADER;
+                        }
+                        break;
+                }
+            }
         }
 
         return State.CANDIDATE;
@@ -298,6 +313,14 @@ public class Node {
                 return State.FOLLOWER;
             }
         }
+    }
+
+    //adds entry to the front of the queue
+    private void addToFront(QueueEntry entry){
+        Queue<QueueEntry> temp = new ConcurrentLinkedQueue<QueueEntry>();   //TODO: make sure this is the right structure
+        temp.add(entry);
+        temp.addAll(taskQueue);
+        taskQueue = temp;
     }
 
     // sends message to all nodes

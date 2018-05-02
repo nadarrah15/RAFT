@@ -1,14 +1,15 @@
 import com.example.raft.MessageProtos;
 import com.google.protobuf.GeneratedMessageV3;
 
-import java.io.BufferedOutputStream;
-import java.io.IOException;
-import java.io.ObjectOutputStream;
-import java.io.OutputStream;
+import java.io.*;
+import java.net.Inet4Address;
+import java.net.UnknownHostException;
 import java.util.*;
 import java.util.concurrent.*;
 
 public class Node {
+
+    final int PORT = 6666;
 
     private Random rand = new Random();
     ExecutorService service = Executors.newSingleThreadExecutor();  //TODO: Reply to 'What is this?'
@@ -20,7 +21,9 @@ public class Node {
     private int commitIndex; // Index of highest log entry known to be committed (initialized to 0)
     private int lastApplied; // Index of highest log entry applied to state machine (initialized to 0)
     private State state; // Defines follower, candidate, or leader state
+    private Net net;
     private Queue<QueueEntry> taskQueue;    //TODO: Reply to 'What is this?'
+    private String database;
 
     //TODO implement LinkedHashMap of threads handling interaction with other nodes
     // A: Dedicate one thread to receiving all messages, one per node for sending messages?
@@ -32,185 +35,161 @@ public class Node {
         FOLLOWER, CANDIDATE, LEADER
     }
 
-    public Node(HashSet<String> ipSet) {
+    public Node(HashSet<String> ipSet) throws UnknownHostException {
+        System.out.println("[NODE] Constructing");
         this.ipSet = ipSet; // Store IP addresses in .txt file
         currentTerm = 0;
+        id = Inet4Address.getLocalHost().getHostAddress();
         commitIndex = 0;
         lastApplied = 0;
         state = State.FOLLOWER; // Begin life as Follower
+        net = new Net(new MessageSerializer(this));
+        taskQueue = new ConcurrentLinkedQueue<>();
+        database = "";
+
+        System.out.println("[NODE] Starting ClientHandler");
         ClientHandler clientHandler = new ClientHandler(this); // Start new thread for console (local client) input
-        clientHandler.start();
-        //TODO: Find a way to randomly initialize unique ID
+        new Thread(clientHandler).start();
     }
 
     public void run() {
-
+        System.out.println("[NODE] Switching state");
         // Commence lifetime operations
         while (true) {
             switch (state) {
                 case FOLLOWER:
+                    System.out.println("[NODE] State -> follower");
                     state = performFollower();
                     break;
                 case CANDIDATE:
+                    System.out.println("[NODE] State -> candidate");
                     state = performCandidate();
                     break;
                 case LEADER:
+                    System.out.println("[NODE] State -> leader");
                     state = performLeader();
                     break;
             }
         }
     }
 
-    public void addToQueue(QueueEntry entry) {
-        taskQueue.add(entry);
+    public void addToQueue(QueueEntry task) {
+        taskQueue.add(task);
     }
 
     private State performFollower() {
         int timeout = rand.nextInt(150) + 150;
-        if (commitIndex > lastApplied) {
-            lastApplied++;
-            //TODO Implement applying to log
-            // apply(log.get(lastApplied))
-        }
-        //TODO Implement
-        // Loop through performFollower operations
-        while (true) {
+        long timeStart = System.nanoTime();
 
-            /*
-            try {
-                //Create Single-Thread for listener
-                Runnable r = () -> {
-                        Message message = incoming message;
-                        switch(message.getType()){
-                            case AppendEntries:
-                                if(AppendEntry.term > currentTerm)
-                                    currentTerm = AppendEntry.term;
-                                if(message.getBody().term < currentTerm)
-                                    return new AppendEntryResponse(false);
-                                if(prevLogIndex >= log.size() || log.get(prevLogIndex).getTerm() != prevLogTerm)
-                                    return new AppendEntryResponse(false);
-                                if(log.get(prevLogIndex).getTerm() != prevLogTerm){
-                                    log.removeRange(prevLogIndex, log.size());
-                                for(all entries in AppendEntries)
-                                    log.add(entry);
-                                if(leaderCommit > commitIndex){
-                                    commitIndex = min(leaderCommit, log.get(log.size() - 1).index);
-                                return new AppendEntryResponse(true);
-                            case RequestVote:
-                                if(term < currentTerm)
-                                    return new RequestVoteResponse(false);
-                                if((votedFor == null || votedFor == candidateId) && log is up to date)
-                                    return new RequestVoteResponse(true);
-                };
-
-                Future<?> f = service.submit(r);
-                f.get(timeout, TimeUnit.MILLISECONDS);
-            } catch (TimeoutException e) {
-                return State.CANDIDATE;
-            } catch (InterruptedException e) {
-                System.out.println("Something Went Wrong In Execution");
-            } catch (ExecutionException e) {
-                System.out.println("Error in Entry Handling");
-            }
-
-            break;
-           */
-
-            try {
-                //Create Single-Thread for listener
-                Runnable r = () -> {
-                    // Check taskQueue
-                    QueueEntry entry = taskQueue.remove();
-                    // Check entry type
-                    switch (entry.getType()) {
-                        case Input:
-                            // Check type of client input (command, crash, reboot, etc.)
-                            // Redirect client commands to leader
-                            break;
-
-                        case Message:
-                            Message message = (Message) entry.getBody();
-                            // Check if message is ingoing or outgoing
-                            if (message.isIncoming()) {
-                                // Process message
-                                switch (message.getType()) {
-                                    case AppendEntries:
-                                        MessageProtos.AppendEntries appendEntries = (MessageProtos.AppendEntries) message.getBody();
-                                        MessageProtos.AppendEntriesResponse appendEntriesResponse;
-
-                                        // Construct response
-                                        if (appendEntries.getTerm() < currentTerm ||
-                                                log.size() <= appendEntries.getPrevLogTerm() ||
-                                                log.get(appendEntries.getPrevLogIndex()).term != appendEntries.getPrevLogTerm()) {
-                                            // Prepare failure response
-                                            appendEntriesResponse = MessageProtos.AppendEntriesResponse.newBuilder().setSuccess(false).setTerm(currentTerm).build();
-                                        } else {
-                                            // Prepare success response
-                                            appendEntriesResponse = MessageProtos.AppendEntriesResponse.newBuilder().setSuccess(true).setTerm(currentTerm).build();
-
-                                            if (appendEntries.getEntriesCount() < 1) {
-                                                // If entries[] is empty, acknowledge message as heartbeat
-                                                //Reset timer
-                                            } else {
-                                                // If existing entry conflicts with new one (same index, different terms), delete existing entry and all that follow
-                                                for (int i = appendEntries.getPrevLogIndex(); i < log.size(); ) {
-                                                    if (log.get(i).term != appendEntries.getTerm()) {
-                                                        log.remove(i);
-                                                        continue;
-                                                    }
-                                                    i++;
-                                                }
-
-                                                // Add new entries to log
-                                                for (int i = appendEntries.getPrevLogIndex(); i < appendEntries.getPrevLogIndex() + appendEntries.getEntriesCount(); i++) {
-
-                                                }
-                                            }
-
-                                        }
-
-                                        break;
-                                    case RequestVote:
-                                        MessageProtos.RequestVote requestVote = (MessageProtos.RequestVote) message.getBody();
-                                        MessageProtos.RequestVoteResponse requestVoteResponse;
-
-                                        // Construct response
-                                        if (requestVote.getTerm() >= currentTerm &&
-                                                votedFor == null &&
-                                                requestVote.getLastLogIndex() >= log.size() - 1 &&
-                                                requestVote.getLastLogTerm() >= log.get(log.size() - 1).term) {
-                                            // Prepare to grant vote
-                                            requestVoteResponse = MessageProtos.RequestVoteResponse.newBuilder().setVoteGranted(true).setTerm(currentTerm).build();
-                                        } else {
-                                            // Prepare to deny vote
-                                            requestVoteResponse = MessageProtos.RequestVoteResponse.newBuilder().setVoteGranted(false).setTerm(currentTerm).build();
-                                            votedFor = requestVote.getCandidateId();
-                                        }
-
-                                        // Call Net object to actually send message across sockets
-
-                                        break;
-                                    // Ignore AppendEntries, RequestVote tasks as follower
-                                }
-                            } else {
-                                // Send message to leader node
-                            }
+            // Loop through performFollower operations
+            while (true) {
+                System.out.println("[NODE] Running follower cycle");
+                    if (commitIndex > lastApplied) {
+                        lastApplied++;
+                        //TODO Implement applying to state machine
+                        apply(log.get(lastApplied));
                     }
-                };
-                Future<?> f = service.submit(r);
-                f.get(timeout, TimeUnit.MILLISECONDS);
-            } catch (TimeoutException e) {
-                return State.CANDIDATE;
-            } catch (InterruptedException e) {
-                System.out.println("Something Went Wrong In Execution");
-            } catch (ExecutionException e) {
-                System.out.println("Error in Entry Handling");
+                    // Check taskQueue
+                    QueueEntry task = taskQueue.poll();
+                    // If no tasks available, just check timer
+                    if (task != null) {
+                        // Check entry type
+                        switch (task.getType()) {
+                            case Input:
+                                // Check type of client input (command, crash, reboot, etc.)
+                                // Redirect client commands to leader
+                                break;
+
+                            case Message:
+                                Message message = (Message) task.getBody();
+                                // Check if message is ingoing or outgoing
+                                if (message.isIncoming()) {
+                                    // Process message
+                                    switch (message.getType()) {
+                                        case AppendEntries:
+                                            MessageProtos.AppendEntries appendEntries = (MessageProtos.AppendEntries) message.getBody();
+                                            MessageProtos.AppendEntriesResponse appendEntriesResponse;
+
+                                            // Construct response
+                                            if (appendEntries.getTerm() < currentTerm ||
+                                                    log.size() <= appendEntries.getPrevLogTerm() ||
+                                                    log.get(appendEntries.getPrevLogIndex()).term != appendEntries.getPrevLogTerm()) {
+                                                // Prepare failure response
+                                                appendEntriesResponse = MessageProtos.AppendEntriesResponse.newBuilder().setSuccess(false).setTerm(currentTerm).build();
+                                            } else {
+                                                // Prepare success response
+                                                // Update currentTerm if necessary
+                                                currentTerm = appendEntries.getTerm();
+                                                appendEntriesResponse = MessageProtos.AppendEntriesResponse.newBuilder().setSuccess(true).setTerm(currentTerm).build();
+
+                                                if (appendEntries.getEntriesCount() > 0) {
+                                                    // If existing entry conflicts with new one (same index, different terms), delete existing entry and all that follow
+                                                    for (int start = appendEntries.getPrevLogIndex() + 1; log.size() > start; ) {
+                                                        log.remove(start);
+                                                    }
+                                                    // Append new entries to log
+                                                    for (int i = 0; i < appendEntries.getEntriesCount(); i++) {
+                                                        MessageProtos.AppendEntries.Entry entry = appendEntries.getEntries(i);
+                                                        log.add(new LogEntry(entry.getTerm(), entry.getMessage()));
+                                                    }
+                                                }
+
+                                                // Reset election timer
+                                                timeStart = System.nanoTime();
+                                            }
+                                            // Add pending response to task queue
+                                            taskQueue.add(new QueueEntry(QueueEntry.Type.Message, new Message(appendEntries.getLeaderId(), Message.Type.AppendEntriesResponse, appendEntriesResponse)));
+                                            break;
+
+                                        case RequestVote:
+                                            MessageProtos.RequestVote requestVote = (MessageProtos.RequestVote) message.getBody();
+                                            MessageProtos.RequestVoteResponse requestVoteResponse;
+
+                                            // Construct response
+                                            if (requestVote.getTerm() >= currentTerm &&
+                                                    votedFor == null &&
+                                                    requestVote.getLastLogIndex() >= log.size() - 1 &&
+                                                    requestVote.getLastLogTerm() >= log.get(log.size() - 1).term) {
+                                                // Prepare to grant vote
+                                                // Update currentTerm if necessary
+                                                currentTerm = requestVote.getTerm();
+                                                requestVoteResponse = MessageProtos.RequestVoteResponse.newBuilder().setVoteGranted(true).setTerm(currentTerm).build();
+                                                votedFor = requestVote.getCandidateId();
+                                                // Reset election timer
+                                                timeStart = System.nanoTime();
+                                            } else {
+                                                // Prepare to deny vote
+                                                requestVoteResponse = MessageProtos.RequestVoteResponse.newBuilder().setVoteGranted(false).setTerm(currentTerm).build();
+                                            }
+                                            // Add pending response to task queue
+                                            taskQueue.add(new QueueEntry(QueueEntry.Type.Message, new Message(requestVote.getCandidateId(), Message.Type.RequestVoteResponse, requestVoteResponse)));
+                                            break;
+                                        // Ignore incoming AppendEntriesResponse, RequestVoteResponse tasks as follower
+                                    }
+                                } else {
+                                    // If message is outgoing, send response
+                                    switch (message.getType()) {
+                                        case AppendEntriesResponse:
+                                            MessageProtos.AppendEntriesResponse appendEntriesResponse = (MessageProtos.AppendEntriesResponse) message.getBody();
+                                            byte[] data = appendEntriesResponse.toByteArray();
+                                            // Call Net object to actually send message across sockets
+                                            net.send(message.getRecipient(), PORT, 1, data.length, data);
+                                            break;
+                                        case RequestVoteResponse:
+                                            MessageProtos.RequestVoteResponse requestVoteResponse = (MessageProtos.RequestVoteResponse) message.getBody();
+                                            data = requestVoteResponse.toByteArray();
+                                            // Call Net object to actually send message across sockets
+                                            net.send(message.getRecipient(), PORT, 3, data.length, data);
+                                            break;
+                                        // Ignore outgoing AppendEntries, RequestVote tasks as follower
+                                    }
+                                }
+                        }
+                    }
+                    // Become candidate if election timer expires
+                    if (System.nanoTime() - timeStart >= timeout)
+                        return State.CANDIDATE;
             }
-
-            break;
-        }
-
-        return State.CANDIDATE;
     }
 
     private State performCandidate() {
@@ -220,10 +199,9 @@ public class Node {
 
         //Build the RequestVote RPC
         MessageProtos.RequestVote.Builder requestVoteBuilder = MessageProtos.RequestVote.newBuilder();
-        requestVoteBuilder.setTerm(currentTerm)     //set RequestVote term
-                .setCandidateId(id)                 //set RequestVote id
-                .setLastLogIndex(log.size() - 1);   //set RequestVote lastLogIndex
-        //set RequestVote lastLogTerm
+        requestVoteBuilder.setTerm(currentTerm)
+                .setCandidateId(id)
+                .setLastLogIndex(log.size() - 1);
         if (log.size() > 0)
             requestVoteBuilder.setLastLogTerm(log.get(log.size() - 1).term);
         else
@@ -236,44 +214,38 @@ public class Node {
         //start timer
         long start = System.nanoTime();
 
-        while (true) {
+        //instantiate incoming message
+        Message message = null;
+
+        while (message == null) {
 
             //wait for incoming message until timeout. Once timeout occurs, restart candidacy
             long end = System.nanoTime();
-            if (end - start == 500)     //
-                return State.CANDIDATE;
+            if (end - start == 500)
+                break;
 
             //Receive either a heartbeat or a vote
-
-            Message message = (Message) taskQueue.poll().getBody();
-
-            /*
-            if(!message.isIncoming())
-                This isn't possible, change_my_mind_meme.jpg
-             */
-
-            //determine message type
-            switch (message.getType()) {
-                case AppendEntries:
-                    MessageProtos.AppendEntries appendMessage = (MessageProtos.AppendEntries) message.getBody();
-                    //check to see if this is the real leader
-                    if (appendMessage.getTerm() >= currentTerm){
-                        taskQueue.add(new QueueEntry(QueueEntry.Type.Message, message.getBody()));
-                        return State.FOLLOWER;
-                    }
-                    break;
-                case RequestVoteResponse:
-                    MessageProtos.RequestVoteResponse response = (MessageProtos.RequestVoteResponse) message.getBody();
-                    if(response.getVoteGranted()) {
-                        numVotes++;
-                        //check if we have majority
-                        if (numVotes > ipSet.size() / 2)
-                            return State.LEADER;
-                    }
-                    break;
-            }
-
+            if (taskQueue.size() != 0)
+                message = (Message) taskQueue.poll().getBody();     //TODO: resolve issues
         }
+
+
+        switch (message.getType()) {
+            case AppendEntries:
+                //if (message.getTerm >= currentTerm){
+                taskQueue.add(new QueueEntry(QueueEntry.Type.Message, message.getBody()));     //TODO: resolve issues
+                return State.FOLLOWER;
+            //}
+            //break;
+            case RequestVoteResponse:
+                //if(message.getVoteGranted()){
+                numVotes++;
+                if (numVotes > ipSet.size() / 2)
+                    return State.LEADER;
+                break;
+        }
+
+        return State.CANDIDATE;
     }
 
 
@@ -285,61 +257,60 @@ public class Node {
         }
 
         // Loop through performLeader operations
-        sendAll(MessageProtos.AppendEntries.newBuilder().build());
         while (true) {
-
             if (commitIndex > lastApplied) {
                 lastApplied++;
-                //TODO Implement applying to log
-                // apply(log.get(lastApplied))
+                //TODO Implement applying to state machine
+                apply(log.get(lastApplied));
             }
 
-            if (!taskQueue.isEmpty()) {
-                QueueEntry entry = taskQueue.remove();
-                // Check entry type
-                switch (entry.getType()) {
-                    case Input:
-                        //Process Client Command
-                        break;
-
-                    case Message:
-                        Message message = (Message) entry.getBody();
-                        // Check if message is ingoing or outgoing
-                        if (message.isIncoming()) {
-                            // Process message
-                            switch (message.getType()) {
-                                case AppendEntries:
-                                    com.google.protobuf.GeneratedMessageV3 appendEntries = message.getBody();
-                                    sendAll(appendEntries);
-                                    break;
-                                case RequestVote:
-                                    //Process RequestVotes
-                            }
-                        } else {
-                            sendAll(MessageProtos.AppendEntries.newBuilder().build());
-                        }
-
-
-                        //TODO replace with further implementation
-                        break;
-                }
-
-                return State.FOLLOWER;
+            //TODO Check if in-queue and out-queue are empty
+            /*
+            if (client input queue has something) {
+                send AppendEntries RPC
+                reset timer
+            } else if (RPC queue has something) {
+                respond appropriately
+            } else if (RPC Response queue has something) {
+                respond appropriately
+            } else {
+                send heartbeat
             }
+            */
+
+            //TODO replace with further implementation
+            break;
         }
+
+        return State.FOLLOWER;
     }
 
-            // sends message to all nodes
-            private void sendAll (com.google.protobuf.GeneratedMessageV3 message){
-                //TODO: write code to send the message to all the nodes
-            }
+    // sends message to all nodes
+    private void sendAll(com.google.protobuf.GeneratedMessageV3 message) {
+        //TODO: write code to send the message to all the nodes
+    }
 
-            //receives message from other nodes
-            private Message getMessage () {
-                //TODO: implement
-                return null;
-            }
-            private void sendToLeader (Message message){
-                //TODO: Write
-            }
+    //receives message from other nodes
+    private Message getMessage() {
+        //TODO: implement
+        return null;
+    }
+
+    private boolean apply(LogEntry entry) {
+        Scanner scan = new Scanner(entry.command);
+        // TODO Error handling
+        switch (scan.next().toLowerCase()) {
+            case "append":
+                database.concat(scan.next());
+                break;
+            case "delete":
+                int start = scan.nextInt();
+                database.substring(0, database.length() - start);
+                break;
+            default:
+                return false;
         }
+
+        return true;
+    }
+}

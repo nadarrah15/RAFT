@@ -14,14 +14,14 @@ public class Node {
     private Random rand = new Random();
     ExecutorService service = Executors.newSingleThreadExecutor();  //TODO: Write description
     private HashSet<String> ipSet; // Stores IP addresses of fellow nodes
-    private String id;         // nodes ID TODO: never instantiated
+    private String id;         // nodes ID
     private int currentTerm; // Latest term server has seen (initialized to 0 on first boot)
     private String votedFor; // Stores candidateId that received vote in current term (or null if none)
     private ArrayList<LogEntry> log; // Stores log entries
     private int commitIndex; // Index of highest log entry known to be committed (initialized to 0)
     private int lastApplied; // Index of highest log entry applied to state machine (initialized to 0)
     private State state; // Defines follower, candidate, or leader state
-    private Net net;
+    public Net net;
     private Queue<QueueEntry> taskQueue;    //TODO: Reply to 'What is this?'
     private String database;
 
@@ -114,9 +114,13 @@ public class Node {
                                     MessageProtos.AppendEntriesResponse appendEntriesResponse;
 
                                     // Construct response
-                                    if (appendEntries.getTerm() < currentTerm ||
-                                            log.size() <= appendEntries.getPrevLogTerm() ||
+                                    if (log.size() <= appendEntries.getPrevLogIndex() ||
                                             log.get(appendEntries.getPrevLogIndex()).term != appendEntries.getPrevLogTerm()) {
+                                        // Increase currentTerm to received term if received term exceeds currentTerm
+                                        if (appendEntries.getTerm() >= currentTerm) {
+                                            currentTerm = appendEntries.getTerm();
+                                        }
+
                                         // Prepare failure response
                                         appendEntriesResponse = MessageProtos.AppendEntriesResponse.newBuilder().setSuccess(false).setTerm(currentTerm).build();
                                     } else {
@@ -127,11 +131,12 @@ public class Node {
                                         currentTerm = appendEntries.getTerm();
                                         appendEntriesResponse = MessageProtos.AppendEntriesResponse.newBuilder().setSuccess(true).setTerm(currentTerm).build();
 
+                                        // If existing entry conflicts with new one (same index, different terms), delete existing entry and all that follow
+                                        for (int start = appendEntries.getPrevLogIndex() + 1; log.size() - 1 > start; ) {
+                                            log.remove(start);
+                                        }
+
                                         if (appendEntries.getEntriesCount() > 0) {
-                                            // If existing entry conflicts with new one (same index, different terms), delete existing entry and all that follow
-                                            for (int start = appendEntries.getPrevLogIndex() + 1; log.size() > start; ) {
-                                                log.remove(start);
-                                            }
                                             // Append new entries to log
                                             for (int i = 0; i < appendEntries.getEntriesCount(); i++) {
                                                 MessageProtos.AppendEntries.Entry entry = appendEntries.getEntries(i);
@@ -235,24 +240,24 @@ public class Node {
              */
 
             //determine message type
-            if(entry != null){
+            if (entry != null) {
                 message = (Message) entry.getBody();
                 switch (message.getType()) {
                     case AppendEntries:
                         MessageProtos.AppendEntries appendMessage = (MessageProtos.AppendEntries) message.getBody();
                         //check to see if this is the real leader
-                        if (appendMessage.getTerm() >= currentTerm){
+                        if (appendMessage.getTerm() >= currentTerm) {
                             addToFront(entry);
                             return State.FOLLOWER;
                         }
                         break;
                     case RequestVoteResponse:
                         MessageProtos.RequestVoteResponse response = (MessageProtos.RequestVoteResponse) message.getBody();
-                        if(response.getVoteGranted()) {
+                        if (response.getVoteGranted()) {
                             numVotes++;
                             start = System.currentTimeMillis();
                             //check if we have majority
-                            if (numVotes > (ipSet.size() + 1)/ 2)
+                            if (numVotes > (ipSet.size() + 1) / 2)
                                 return State.LEADER;
                         }
                         break;
@@ -276,7 +281,6 @@ public class Node {
         while (true) {
             if (commitIndex > lastApplied) {
                 lastApplied++;
-                //TODO Implement applying to state machine
                 apply(log.get(lastApplied));
             }
 
@@ -329,7 +333,7 @@ public class Node {
     }
 
     //adds entry to the front of the queue
-    private void addToFront(QueueEntry entry){
+    private void addToFront(QueueEntry entry) {
         Queue<QueueEntry> temp = new ConcurrentLinkedQueue<QueueEntry>();   //TODO: make sure this is the right structure
         temp.add(entry);
         temp.addAll(taskQueue);

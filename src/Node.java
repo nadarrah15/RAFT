@@ -281,7 +281,7 @@ public class Node {
             }
 
             if (!taskQueue.isEmpty()) {
-                QueueEntry entry = taskQueue.remove();
+                QueueEntry entry = taskQueue.poll();
                 // Check entry type
                 switch (entry.getType()) {
                     case Input:
@@ -295,11 +295,24 @@ public class Node {
                             // Process message
                             switch (message.getType()) {
                                 case AppendEntries:
-                                    com.google.protobuf.GeneratedMessageV3 appendEntries = message.getBody();
-                                    sendAll(appendEntries);
+                                    MessageProtos.AppendEntries appendMessage = (MessageProtos.AppendEntries) message.getBody();
+                                    sendAll(appendMessage);
+                                    addToFront(entry);
                                     break;
                                 case RequestVote:
-                                    //Process RequestVotes
+                                    MessageProtos.RequestVote requestVote = (MessageProtos.RequestVote) message.getBody();
+                                    if (requestVote.getTerm() >= currentTerm &&
+                                            votedFor == null &&
+                                            requestVote.getLastLogIndex() >= log.size() - 1 &&
+                                            requestVote.getLastLogTerm() >= log.get(log.size() - 1).term) {
+                                        // Prepare to grant vote
+                                        // Update currentTerm if necessary
+                                        currentTerm = requestVote.getTerm();
+                                        MessageProtos.RequestVoteResponse requestVoteResponse = MessageProtos.RequestVoteResponse.newBuilder().setVoteGranted(true).setTerm(currentTerm).build();
+                                        votedFor = requestVote.getCandidateId();
+                                        return State.FOLLOWER;
+                                    }
+                                    break;
                             }
                         } else {
                             sendAll(MessageProtos.AppendEntries.newBuilder().build());

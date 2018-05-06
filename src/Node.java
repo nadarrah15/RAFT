@@ -87,7 +87,7 @@ public class Node {
         // Loop through performFollower operations
         while (true) {
             System.out.println("[NODE] Running follower cycle");
-            if (commitIndex > lastApplied) {
+            while (commitIndex > lastApplied) {
                 lastApplied++;
                 //TODO Implement applying to state machine
                 apply(log.get(lastApplied));
@@ -223,7 +223,7 @@ public class Node {
 
             //wait for incoming message until timeout. Once timeout occurs, restart candidacy
             long end = System.nanoTime();
-            if (end - start == 500)
+            if (end - start >= 500)
                 break;
 
             //Receive either a heartbeat or a vote
@@ -252,7 +252,7 @@ public class Node {
                             numVotes++;
                             start = System.currentTimeMillis();
                             //check if we have majority
-                            if (numVotes > ipSet.size() / 2)
+                            if (numVotes > (ipSet.size() + 1)/ 2)
                                 return State.LEADER;
                         }
                         break;

@@ -13,7 +13,15 @@ public class ClientHandler implements Runnable {
     @Override
     public void run() {
         while (true) {
-            node.addToQueue(new QueueEntry(QueueEntry.Type.Input, scan.next()));
+            String input = scan.next();
+            if (input.equals("partition")) {
+                node.net.setIsPartitioned(true);
+            } else if (input.equals("unpartition")) {
+                node.net.setIsPartitioned(false);
+            } else {
+                node.addToQueue(new QueueEntry(QueueEntry.Type.Input, input));
+            }
         }
     }
 }
+

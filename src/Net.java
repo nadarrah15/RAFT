@@ -8,9 +8,19 @@ import java.util.Set;
 public class Net {
 
     private NetSerializer serializer;
+    private boolean isPartitioned;
 
     public Net(NetSerializer serializer) {
         this.serializer = serializer;
+        isPartitioned = false;
+    }
+
+    public boolean getIsPartitioned() {
+        return isPartitioned;
+    }
+
+    public void setIsPartitioned(boolean isPartitioned) {
+        this.isPartitioned = isPartitioned;
     }
 
     public void listen(int port) throws Exception {
@@ -22,23 +32,25 @@ public class Net {
                 ServerSocket serverSocket = new ServerSocket(port);
 
                 while (true) {
-                    Socket clientSocket = serverSocket.accept();
-                    // New thread per client
-                    Runnable rc = () -> {
-                        try {
-                            DataInputStream dis = new DataInputStream(clientSocket.getInputStream());
-                            int type = dis.readInt();
-                            byte[] data = new byte[dis.readInt()];
+                    if (!isPartitioned) {
+                        Socket clientSocket = serverSocket.accept();
+                        // New thread per client
+                        Runnable rc = () -> {
+                            try {
+                                DataInputStream dis = new DataInputStream(clientSocket.getInputStream());
+                                int type = dis.readInt();
+                                byte[] data = new byte[dis.readInt()];
 
-                            dis.readFully(data);
-                            serializer.receive(type, data);
-                            clientSocket.close();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
+                                dis.readFully(data);
+                                serializer.receive(type, data);
+                                clientSocket.close();
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
 
-                    };
-                    new Thread(rc).start();
+                        };
+                        new Thread(rc).start();
+                    }
                 }
 
             } catch (IOException e) {

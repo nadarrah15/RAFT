@@ -1,6 +1,7 @@
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.net.ConnectException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Set;
@@ -88,8 +89,9 @@ public class Net {
 
                 sendSocket.close();
                 dos.close();
+                System.out.println("Sent");
             } catch (IOException e) {
-                e.printStackTrace();
+                //e.printStackTrace();
             }
         };
 

@@ -37,7 +37,7 @@ public class Node {
         FOLLOWER, CANDIDATE, LEADER
     }
 
-    public Node(HashSet<String> ipSet) throws UnknownHostException {
+    public Node(HashSet<String> ipSet) throws Exception {
         System.out.println("[NODE] Constructing");
         this.ipSet = ipSet; // Store IP addresses in .txt file
         currentTerm = 0;
@@ -52,6 +52,7 @@ public class Node {
         database = "";
         log = new ArrayList();
 
+        net.listen(PORT);
         System.out.println("[NODE] Starting ClientHandler");
         ClientHandler clientHandler = new ClientHandler(this); // Start new thread for console (local client) input
         new Thread(clientHandler).start();
@@ -219,7 +220,7 @@ public class Node {
         MessageProtos.RequestVote requestVote = requestVoteBuilder.build();
 
         //Send RequestVote() to all
-        System.out.println("[NODE] Sending requestVote");
+        //System.out.println("[NODE] Sending requestVote");
         sendAll(requestVote);
 
         //start timer

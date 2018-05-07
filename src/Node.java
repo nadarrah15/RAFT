@@ -224,7 +224,7 @@ public class Node {
         sendAll(requestVote);
 
         //start timer
-        long start = System.nanoTime();
+        long start = System.currentTimeMillis();
 
         //instantiate incoming message
         Message message = null;
@@ -232,8 +232,8 @@ public class Node {
         while (message == null) {
 
             //wait for incoming message until timeout. Once timeout occurs, restart candidacy
-            long end = System.nanoTime();
-            if (end - start >= 500)
+            long end = System.currentTimeMillis();
+            if (end - start >= 300)
                 break;
 
             //Receive either a heartbeat or a vote

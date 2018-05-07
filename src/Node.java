@@ -281,9 +281,6 @@ public class Node {
                             addToFront(entry);
                             return State.FOLLOWER;
                         }
-                        else{
-
-                        }
                         message = null;
                         break;
                 }

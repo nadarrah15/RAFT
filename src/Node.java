@@ -291,11 +291,9 @@ public class Node {
                         MessageProtos.RequestVoteResponse response = (MessageProtos.RequestVoteResponse) message.getBody();
                         if(response.getTerm() > currentTerm) {
                             currentTerm = response.getTerm();
-                            taskQueue.remove();
                             return State.FOLLOWER;
                         }
                         else if (response.getVoteGranted()) {
-                            taskQueue.remove();
                             numVotes++;
                             start = System.currentTimeMillis();
                             //check if we have majority
@@ -303,6 +301,7 @@ public class Node {
                             if (numVotes > ipSet.size() / 2 + 1)
                                 return State.LEADER;
                         }
+                        taskQueue.remove();
                         message = null;
                         break;
                     case RequestVote:

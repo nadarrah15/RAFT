@@ -65,7 +65,7 @@ public class Node {
                     state = performFollower();
                     break;
                 case CANDIDATE:
-                    System.out.println("[NODE] State -> candidate");
+                    //System.out.println("[NODE] State -> candidate");
                     state = performCandidate();
                     break;
                 case LEADER:

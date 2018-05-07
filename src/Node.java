@@ -237,7 +237,7 @@ public class Node {
                 break;
 
             //Receive either a heartbeat or a vote
-            QueueEntry entry = taskQueue.poll();
+            QueueEntry entry = taskQueue.peek();
 
             /*
             if(!message.isIncoming())
@@ -252,7 +252,6 @@ public class Node {
                         MessageProtos.AppendEntries appendMessage = (MessageProtos.AppendEntries) message.getBody();
                         //check to see if this is the real leader
                         if (appendMessage.getTerm() >= currentTerm) {
-                            addToFront(entry);
                             return State.FOLLOWER;
                         }
                         message = null;
@@ -261,9 +260,11 @@ public class Node {
                         MessageProtos.RequestVoteResponse response = (MessageProtos.RequestVoteResponse) message.getBody();
                         if(response.getTerm() > currentTerm) {
                             currentTerm = response.getTerm();
+                            taskQueue.remove();
                             return State.FOLLOWER;
                         }
-                        if (response.getVoteGranted()) {
+                        else if (response.getVoteGranted()) {
+                            taskQueue.remove();
                             numVotes++;
                             start = System.currentTimeMillis();
                             //check if we have majority
@@ -277,7 +278,6 @@ public class Node {
                         MessageProtos.RequestVote requestVote1 = (MessageProtos.RequestVote) message.getBody();
                         if(requestVote1.getTerm() > currentTerm){
                             currentTerm = requestVote1.getTerm();
-                            addToFront(entry);
                             return State.FOLLOWER;
                         }
                         message = null;

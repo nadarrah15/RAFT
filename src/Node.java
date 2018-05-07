@@ -318,13 +318,7 @@ public class Node {
                         lastApplied++;
                         byte[] data = message.toString().getBytes();
                         try {
-                            sendAll(MessageProtos.AppendEntries.newBuilder()
-                                    .setTerm(currentTerm)
-                                    .setLeaderId(id)
-                                    .setPrevLogIndex(commitIndex)
-                                    .setPrevLogTerm(currentTerm)
-                                    .setEntries(commitIndex + 1,
-                                    MessageProtos.AppendEntries.Entry.parseFrom(data)).build(), 0);
+                            sendAll(MessageProtos.AppendEntries.newBuilder().setTerm(currentTerm).setLeaderId(id).setPrevLogIndex(commitIndex).setPrevLogTerm(currentTerm).setEntries(commitIndex + 1, MessageProtos.AppendEntries.Entry.parseFrom(data)).build(), 0);
                         }catch(InvalidProtocolBufferException ex){
 
                         }

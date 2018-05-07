@@ -21,21 +21,23 @@ public class MessageSerializer implements NetSerializer {
                     message = new Message(null, Message.Type.AppendEntries, MessageProtos.AppendEntries.parseFrom(data));
                     break;
                 case 1:
-                    message = new Message(null, Message.Type.AppendEntriesResponse, MessageProtos.AppendEntries.parseFrom(data));
+                    message = new Message(null, Message.Type.AppendEntriesResponse, MessageProtos.AppendEntriesResponse.parseFrom(data));
                     break;
                 case 2:
-                    message = new Message(null, Message.Type.RequestVote, MessageProtos.AppendEntries.parseFrom(data));
+                    message = new Message(null, Message.Type.RequestVote, MessageProtos.RequestVote.parseFrom(data));
                     break;
                 case 3:
-                    message = new Message(null, Message.Type.RequestVoteResponse, MessageProtos.AppendEntries.parseFrom(data));
+                    message = new Message(null, Message.Type.RequestVoteResponse, MessageProtos.RequestVoteResponse.parseFrom(data));
                     break;
                 default:
                     return false;
             }
         } catch (InvalidProtocolBufferException e) {
+            e.printStackTrace();
             return false;
         }
 
+        System.out.println("[SERIALIZER] Added message to queue");
         node.addToQueue(new QueueEntry(QueueEntry.Type.Message, message));
         return true;
     }

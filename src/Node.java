@@ -50,7 +50,8 @@ public class Node {
         net = new Net(new MessageSerializer(this));
         taskQueue = new ConcurrentLinkedQueue<>();
         database = "";
-        log = new ArrayList();
+        log = new ArrayList<>();
+        log.add(new LogEntry(0, null));
 
         net.listen(PORT);
         System.out.println("[NODE] Starting ClientHandler");
@@ -116,38 +117,16 @@ public class Node {
                                     MessageProtos.AppendEntriesResponse appendEntriesResponse;
 
                                     // Construct response
-                                    try {
-                                        if (log.size() <= appendEntries.getPrevLogIndex() ||
-                                                log.get(appendEntries.getPrevLogIndex()).term != appendEntries.getPrevLogTerm()) {
-                                            // Increase currentTerm to received term if received term exceeds currentTerm
-                                            if (appendEntries.getTerm() >= currentTerm) {
-                                                currentTerm = appendEntries.getTerm();
-                                            }
-
-                                            // Prepare failure response
-                                            appendEntriesResponse = MessageProtos.AppendEntriesResponse.newBuilder().setSuccess(false).setTerm(currentTerm).build();
-                                        } else {
-                                            // Reset election timer
-                                            timeStart = System.currentTimeMillis();
-                                            // Prepare success response
-                                            // Update currentTerm if necessary
+                                    if (log.size() <= appendEntries.getPrevLogIndex() ||
+                                            log.get(appendEntries.getPrevLogIndex()).term != appendEntries.getPrevLogTerm()) {
+                                        // Increase currentTerm to received term if received term exceeds currentTerm
+                                        if (appendEntries.getTerm() >= currentTerm) {
                                             currentTerm = appendEntries.getTerm();
-                                            appendEntriesResponse = MessageProtos.AppendEntriesResponse.newBuilder().setSuccess(true).setTerm(currentTerm).build();
-
-                                            // If existing entry conflicts with new one (same index, different terms), delete existing entry and all that follow
-                                            for (int start = appendEntries.getPrevLogIndex() + 1; log.size() - 1 > start; ) {
-                                                log.remove(start);
-                                            }
-
-                                            if (appendEntries.getEntriesCount() > 0) {
-                                                // Append new entries to log
-                                                for (int i = 0; i < appendEntries.getEntriesCount(); i++) {
-                                                    MessageProtos.AppendEntries.Entry entry = appendEntries.getEntries(i);
-                                                    log.add(new LogEntry(entry.getTerm(), entry.getMessage()));
-                                                }
-                                            }
                                         }
-                                    }catch(ArrayIndexOutOfBoundsException e){
+
+                                        // Prepare failure response
+                                        appendEntriesResponse = MessageProtos.AppendEntriesResponse.newBuilder().setSuccess(false).setTerm(currentTerm).build();
+                                    } else {
                                         // Reset election timer
                                         timeStart = System.currentTimeMillis();
                                         // Prepare success response

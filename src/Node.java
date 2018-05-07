@@ -271,6 +271,7 @@ public class Node {
                         if(response.getTerm() > currentTerm) {
                             currentTerm = response.getTerm();
                             taskQueue.remove();
+
                             return State.FOLLOWER;
                         }
                         else if (response.getVoteGranted()) {

@@ -233,12 +233,15 @@ public class Node {
         //instantiate incoming message
         Message message = null;
 
+        Random rand = new Random();
+        int timeout = rand.nextInt(150) + 150;
+
         while (message == null) {
 
             //wait for incoming message until timeout. Once timeout occurs, restart candidacy
             long end = System.currentTimeMillis();
 
-            if (end - start >= 500)
+            if (end - start >= timeout)
                 break;
 
             //Receive either a heartbeat or a vote

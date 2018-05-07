@@ -206,6 +206,7 @@ public class Node {
 
         currentTerm++;      //increment term
         int numVotes = 1;   //vote for self
+        System.out.println(currentTerm);
 
         //Build the RequestVote RPC
         MessageProtos.RequestVote.Builder requestVoteBuilder = MessageProtos.RequestVote.newBuilder();
@@ -265,6 +266,13 @@ public class Node {
                             //TODO Determine correct majority
                             if (numVotes > ipSet.size() / 2 + 1)
                                 return State.LEADER;
+                        }
+                        break;
+                    case RequestVote:
+                        MessageProtos.RequestVoteResponse requestVoteResponse = (MessageProtos.RequestVoteResponse) message.getBody();
+                        if(requestVoteResponse.getTerm() > currentTerm){
+                            currentTerm = requestVoteResponse.getTerm();
+                            return State.FOLLOWER;
                         }
                         break;
                 }

@@ -48,6 +48,7 @@ public class Net {
                                 dis.readFully(data);
                                 serializer.receive(type, data);
                                 clientSocket.close();
+                                System.out.println("[NET] Serialized message");
                             } catch (IOException e) {
                                 e.printStackTrace();
                             }

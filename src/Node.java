@@ -267,8 +267,8 @@ public class Node {
                             //TODO Determine correct majority
                             if (numVotes > ipSet.size() / 2 + 1)
                                 return State.LEADER;
-                            message = null;
                         }
+                        message = null;
                         break;
                     case RequestVote:
                         MessageProtos.RequestVote requestVote1 = (MessageProtos.RequestVote) message.getBody();

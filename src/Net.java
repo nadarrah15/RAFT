@@ -30,10 +30,12 @@ public class Net {
         Runnable rs = () -> {
             try {
                 ServerSocket serverSocket = new ServerSocket(port);
-
+                serverSocket.setSoTimeout(0); // Sets infinite timeout for testing
                 while (true) {
                     if (!isPartitioned) {
+
                         Socket clientSocket = serverSocket.accept();
+                        clientSocket.setSoTimeout(0); // Sets infinite timeout for testing
                         // New thread per client
                         Runnable rc = () -> {
                             try {
@@ -47,8 +49,8 @@ public class Net {
                             } catch (IOException e) {
                                 e.printStackTrace();
                             }
-
                         };
+                        // Run new thread
                         new Thread(rc).start();
                     }
                 }

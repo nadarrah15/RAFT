@@ -206,6 +206,7 @@ public class Node {
 
         currentTerm++;      //increment term
         int numVotes = 1;   //vote for self
+        System.out.println(currentTerm);
 
         //Build the RequestVote RPC
         MessageProtos.RequestVote.Builder requestVoteBuilder = MessageProtos.RequestVote.newBuilder();
@@ -258,7 +259,6 @@ public class Node {
                         message = null;
                         break;
                     case RequestVoteResponse:
-                    System.out.println("[NODE | CANDIDATE] received vote response");
                         MessageProtos.RequestVoteResponse response = (MessageProtos.RequestVoteResponse) message.getBody();
                         if(response.getTerm() > currentTerm) {
                             currentTerm = response.getTerm();
@@ -278,7 +278,6 @@ public class Node {
                         MessageProtos.RequestVote requestVote1 = (MessageProtos.RequestVote) message.getBody();
                         if(requestVote1.getTerm() > currentTerm){
                             currentTerm = requestVote1.getTerm();
-                            addToFront(entry);
                             return State.FOLLOWER;
                         }
                         message = null;
@@ -318,13 +317,7 @@ public class Node {
                         lastApplied++;
                         byte[] data = message.toString().getBytes();
                         try {
-                            sendAll(MessageProtos.AppendEntries.newBuilder()
-                                    .setTerm(currentTerm)
-                                    .setLeaderId(id)
-                                    .setPrevLogIndex(commitIndex)
-                                    .setPrevLogTerm(currentTerm)
-                                    .setEntries(commitIndex + 1,
-                                    MessageProtos.AppendEntries.Entry.parseFrom(data)).build(), 0);
+                            sendAll(MessageProtos.AppendEntries.newBuilder().setTerm(currentTerm).setLeaderId(id).setPrevLogIndex(commitIndex).setPrevLogTerm(currentTerm).setEntries(commitIndex + 1, MessageProtos.AppendEntries.Entry.parseFrom(data)).build(), 0);
                         }catch(InvalidProtocolBufferException ex){
 
                         }

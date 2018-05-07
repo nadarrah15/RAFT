@@ -206,7 +206,6 @@ public class Node {
 
         currentTerm++;      //increment term
         int numVotes = 1;   //vote for self
-        System.out.println(currentTerm);
 
         //Build the RequestVote RPC
         MessageProtos.RequestVote.Builder requestVoteBuilder = MessageProtos.RequestVote.newBuilder();
@@ -221,7 +220,7 @@ public class Node {
 
         //Send RequestVote() to all
         //System.out.println("[NODE] Sending requestVote");
-        sendAll(requestVote);
+        sendAll(requestVote, 2);
 
         //start timer
         long start = System.currentTimeMillis();
@@ -259,6 +258,7 @@ public class Node {
                         message = null;
                         break;
                     case RequestVoteResponse:
+                    System.out.println("[NODE | CANDIDATE] received vote response");
                         MessageProtos.RequestVoteResponse response = (MessageProtos.RequestVoteResponse) message.getBody();
                         if(response.getTerm() > currentTerm) {
                             currentTerm = response.getTerm();
@@ -278,7 +278,11 @@ public class Node {
                         MessageProtos.RequestVote requestVote1 = (MessageProtos.RequestVote) message.getBody();
                         if(requestVote1.getTerm() > currentTerm){
                             currentTerm = requestVote1.getTerm();
+                            addToFront(entry);
                             return State.FOLLOWER;
+                        }
+                        else{
+
                         }
                         message = null;
                         break;
@@ -298,7 +302,7 @@ public class Node {
         }
 
         // Loop through performLeader operations
-        sendAll(MessageProtos.AppendEntries.newBuilder().build());
+        sendAll(MessageProtos.AppendEntries.newBuilder().build(), 0);
         while (true) {
             if (commitIndex > lastApplied) {
                 lastApplied++;
@@ -317,7 +321,13 @@ public class Node {
                         lastApplied++;
                         byte[] data = message.toString().getBytes();
                         try {
-                            sendAll(MessageProtos.AppendEntries.newBuilder().setTerm(currentTerm).setLeaderId(id).setPrevLogIndex(commitIndex).setPrevLogTerm(currentTerm).setEntries(commitIndex + 1, MessageProtos.AppendEntries.Entry.parseFrom(data)).build());
+                            sendAll(MessageProtos.AppendEntries.newBuilder()
+                                    .setTerm(currentTerm)
+                                    .setLeaderId(id)
+                                    .setPrevLogIndex(commitIndex)
+                                    .setPrevLogTerm(currentTerm)
+                                    .setEntries(commitIndex + 1,
+                                    MessageProtos.AppendEntries.Entry.parseFrom(data)).build(), 0);
                         }catch(InvalidProtocolBufferException ex){
 
                         }
@@ -331,7 +341,7 @@ public class Node {
                             switch (message.getType()) {
                                 case AppendEntries:
                                     MessageProtos.AppendEntries appendMessage = (MessageProtos.AppendEntries) message.getBody();
-                                    sendAll(appendMessage);
+                                    sendAll(appendMessage, 0);
                                     addToFront(entry);
                                     break;
                                 case RequestVote:
@@ -348,7 +358,7 @@ public class Node {
                                     break;
                             }
                         } else {
-                            sendAll(MessageProtos.AppendEntries.newBuilder().build());
+                            sendAll(MessageProtos.AppendEntries.newBuilder().build(), 0);
                         }
 
 
@@ -370,10 +380,10 @@ public class Node {
     }
 
     // sends message to all nodes
-    private void sendAll(com.google.protobuf.GeneratedMessageV3 message) {
+    private void sendAll(com.google.protobuf.GeneratedMessageV3 message, int type) {
         //TODO: write code to send the message to all the nodes
         byte[] data = message.toByteArray();
-        net.send(ipSet, 6666, 1, data.length, data);
+        net.send(ipSet, 6666, type, data.length, data);
     }
 
     //receives message from other nodes

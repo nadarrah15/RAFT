@@ -259,7 +259,7 @@ public class Node {
                             start = System.currentTimeMillis();
                             //check if we have majority
                             //TODO Determine correct majority
-                            if (numVotes > ipSet.size() / 2) // (ipSet.size() + 1) / 2
+                            if (numVotes > ipSet.size() / 2 + 1)
                                 return State.LEADER;
                         }
                         break;

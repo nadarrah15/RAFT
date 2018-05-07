@@ -167,7 +167,7 @@ public class Node {
                                     requestVoteResponse = MessageProtos.RequestVoteResponse.newBuilder().setVoteGranted(true).setTerm(currentTerm).build();
                                     votedFor = requestVote.getCandidateId();
                                     // Reset election timer
-                                    timeStart = System.nanoTime();
+                                    timeStart = System.currentTimeMillis();
                                 } else {
                                     // Prepare to deny vote
                                     requestVoteResponse = MessageProtos.RequestVoteResponse.newBuilder().setVoteGranted(false).setTerm(currentTerm).build();
@@ -198,7 +198,7 @@ public class Node {
             }
         }
         // Become candidate if election timer expires
-        if (System.nanoTime() - timeStart >= timeout)
+        if (System.currentTimeMillis() - timeStart >= timeout)
             return State.CANDIDATE;
         else {
             return State.FOLLOWER;

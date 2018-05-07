@@ -59,16 +59,16 @@ public class Node {
     }
 
     public void run() {
-        System.out.println("[NODE] Switching state");
         // Commence lifetime operations
         while (true) {
+            System.out.println("[NODE] term " + currentTerm);
             switch (state) {
                 case FOLLOWER:
                     System.out.println("[NODE] State -> follower");
                     state = performFollower();
                     break;
                 case CANDIDATE:
-                    //System.out.println("[NODE] State -> candidate");
+                    System.out.println("[NODE] State -> candidate");
                     state = performCandidate();
                     break;
                 case LEADER:
@@ -86,8 +86,7 @@ public class Node {
     private State performFollower() {
 
         int timeout = rand.nextInt(150) + 150;
-        long timeStart = System.nanoTime();
-
+        long timeStart = System.currentTimeMillis();
         // Do performFollower operations
         while (commitIndex > lastApplied) {
             lastApplied++;
@@ -127,7 +126,7 @@ public class Node {
                                     appendEntriesResponse = MessageProtos.AppendEntriesResponse.newBuilder().setSuccess(false).setTerm(currentTerm).build();
                                 } else {
                                     // Reset election timer
-                                    timeStart = System.nanoTime();
+                                    timeStart = System.currentTimeMillis();
                                     // Prepare success response
                                     // Update currentTerm if necessary
                                     currentTerm = appendEntries.getTerm();
@@ -224,7 +223,7 @@ public class Node {
         sendAll(requestVote);
 
         //start timer
-        long start = System.nanoTime();
+        long start = System.currentTimeMillis();
 
         //instantiate incoming message
         Message message = null;
@@ -232,7 +231,7 @@ public class Node {
         while (message == null) {
 
             //wait for incoming message until timeout. Once timeout occurs, restart candidacy
-            long end = System.nanoTime();
+            long end = System.currentTimeMillis();
             if (end - start >= 500)
                 break;
 

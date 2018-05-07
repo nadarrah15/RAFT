@@ -35,6 +35,7 @@ public class Net {
                     if (!isPartitioned) {
 
                         Socket clientSocket = serverSocket.accept();
+                        System.out.println("[NET] Connected with " + clientSocket.getInetAddress());
                         clientSocket.setSoTimeout(0); // Sets infinite timeout for testing
                         // New thread per client
                         Runnable rc = () -> {

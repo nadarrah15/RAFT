@@ -37,6 +37,19 @@ public class Node {
         FOLLOWER, CANDIDATE, LEADER
     }
 
+    public int getState(){
+        switch(state){
+            case FOLLOWER:
+                return 0;
+            case CANDIDATE:
+                return 1;
+            case LEADER:
+                return 2;
+            default:
+                return -1;
+        }
+    }
+
     public Node(HashSet<String> ipSet) throws Exception {
         System.out.println("[NODE] Constructing");
         this.ipSet = ipSet; // Store IP addresses in .txt file
@@ -256,7 +269,6 @@ public class Node {
             //determine message type
             if (entry != null) {
                 message = (Message) entry.getBody();
-                System.out.println(message.getBody().toString());
                 switch (message.getType()) {
                     case AppendEntries:
                         MessageProtos.AppendEntries appendMessage = (MessageProtos.AppendEntries) message.getBody();
@@ -308,17 +320,20 @@ public class Node {
         }
 
         // Loop through performLeader operations
-        sendAll(MessageProtos.AppendEntries.newBuilder()
-                .setTerm(currentTerm).setLeaderId(id)
-                .setPrevLogIndex(log.size() - 1)
-                .setPrevLogTerm(log.isEmpty() ? 0 : log.get(log.size() - 1).term)
-                .setLeaderCommit(commitIndex)
-                .build(), 0);
+
         while (true) {
+
             if (commitIndex > lastApplied) {
                 lastApplied++;
                 apply(log.get(lastApplied));
             }
+
+            sendAll(MessageProtos.AppendEntries.newBuilder()
+                    .setTerm(currentTerm).setLeaderId(id)
+                    .setPrevLogIndex(log.size() - 1)
+                    .setPrevLogTerm(log.isEmpty() ? 0 : log.get(log.size() - 1).term)
+                    .setLeaderCommit(commitIndex)
+                    .build(), 0);
 
             if (!taskQueue.isEmpty()) {
                 QueueEntry entry = taskQueue.poll();
@@ -364,6 +379,16 @@ public class Node {
                                         votedFor = requestVote.getCandidateId();
                                         return State.FOLLOWER;
                                     }
+                                    else{
+                                        sendAll(MessageProtos.AppendEntries.newBuilder()
+                                                .setTerm(currentTerm).setLeaderId(id)
+                                                .setPrevLogIndex(log.size() - 1)
+                                                .setPrevLogTerm(log.isEmpty() ? 0 : log.get(log.size() - 1).term)
+                                                .setLeaderCommit(commitIndex)
+                                                .build(), 0);
+                                    }
+                                    break;
+                                default:
                                     break;
                             }
                         } else {
@@ -380,6 +405,13 @@ public class Node {
                         break;
                 }
 
+            }else{
+                sendAll(MessageProtos.AppendEntries.newBuilder()
+                        .setTerm(currentTerm).setLeaderId(id)
+                        .setPrevLogIndex(log.size() - 1)
+                        .setPrevLogTerm(log.isEmpty() ? 0 : log.get(log.size() - 1).term)
+                        .setLeaderCommit(commitIndex)
+                        .build(), 0);
             }
         }
     }

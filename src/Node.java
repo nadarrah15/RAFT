@@ -1,5 +1,6 @@
 import com.example.raft.MessageProtos;
 import com.google.protobuf.GeneratedMessageV3;
+import com.google.protobuf.InvalidProtocolBufferException;
 
 import java.io.*;
 import java.net.Inet4Address;
@@ -49,6 +50,7 @@ public class Node {
         net = new Net(new MessageSerializer(this));
         taskQueue = new ConcurrentLinkedQueue<>();
         database = "";
+        log = new ArrayList();
 
         System.out.println("[NODE] Starting ClientHandler");
         ClientHandler clientHandler = new ClientHandler(this); // Start new thread for console (local client) input
@@ -217,6 +219,7 @@ public class Node {
         MessageProtos.RequestVote requestVote = requestVoteBuilder.build();
 
         //Send RequestVote() to all
+        System.out.println("[NODE] Sending requestVote");
         sendAll(requestVote);
 
         //start timer
@@ -289,13 +292,23 @@ public class Node {
             if (!taskQueue.isEmpty()) {
                 QueueEntry entry = taskQueue.poll();
                 // Check entry type
+                Message message;
                 switch (entry.getType()) {
                     case Input:
-                        //Process Client Command
+                        message = (Message) entry.getBody();
+                        LogEntry e = new LogEntry(currentTerm, message.getBody().toString());
+                        apply(e);
+                        lastApplied++;
+                        byte[] data = message.toString().getBytes();
+                        try {
+                            sendAll(MessageProtos.AppendEntries.newBuilder().setTerm(currentTerm).setLeaderId(id).setPrevLogIndex(commitIndex).setPrevLogTerm(currentTerm).setEntries(commitIndex + 1, MessageProtos.AppendEntries.Entry.parseFrom(data)).build());
+                        }catch(InvalidProtocolBufferException ex){
+
+                        }
                         break;
 
                     case Message:
-                        Message message = (Message) entry.getBody();
+                        message = (Message) entry.getBody();
                         // Check if message is ingoing or outgoing
                         if (message.isIncoming()) {
                             // Process message
@@ -311,8 +324,6 @@ public class Node {
                                             votedFor == null &&
                                             requestVote.getLastLogIndex() >= log.size() - 1 &&
                                             requestVote.getLastLogTerm() >= log.get(log.size() - 1).term) {
-                                        // Prepare to grant vote
-                                        // Update currentTerm if necessary
                                         currentTerm = requestVote.getTerm();
                                         MessageProtos.RequestVoteResponse requestVoteResponse = MessageProtos.RequestVoteResponse.newBuilder().setVoteGranted(true).setTerm(currentTerm).build();
                                         votedFor = requestVote.getCandidateId();
@@ -345,6 +356,8 @@ public class Node {
     // sends message to all nodes
     private void sendAll(com.google.protobuf.GeneratedMessageV3 message) {
         //TODO: write code to send the message to all the nodes
+        byte[] data = message.toByteArray();
+        net.send(ipSet, 6667, 1, data.length, data);
     }
 
     //receives message from other nodes

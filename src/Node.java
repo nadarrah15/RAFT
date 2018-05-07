@@ -206,7 +206,6 @@ public class Node {
 
         currentTerm++;      //increment term
         int numVotes = 1;   //vote for self
-        System.out.println(currentTerm);
 
         //Build the RequestVote RPC
         MessageProtos.RequestVote.Builder requestVoteBuilder = MessageProtos.RequestVote.newBuilder();
@@ -278,6 +277,7 @@ public class Node {
                         MessageProtos.RequestVote requestVote1 = (MessageProtos.RequestVote) message.getBody();
                         if(requestVote1.getTerm() > currentTerm){
                             currentTerm = requestVote1.getTerm();
+                            addToFront(entry);
                             return State.FOLLOWER;
                         }
                         message = null;

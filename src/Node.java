@@ -288,6 +288,7 @@ public class Node {
                             currentTerm = requestVote1.getTerm();
                             return State.FOLLOWER;
                         }
+                        taskQueue.remove();
                         message = null;
                         break;
                 }

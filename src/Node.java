@@ -260,6 +260,10 @@ public class Node {
                         break;
                     case RequestVoteResponse:
                         MessageProtos.RequestVoteResponse response = (MessageProtos.RequestVoteResponse) message.getBody();
+                        if(response.getTerm() > currentTerm) {
+                            currentTerm = response.getTerm();
+                            return State.FOLLOWER;
+                        }
                         if (response.getVoteGranted()) {
                             numVotes++;
                             start = System.currentTimeMillis();

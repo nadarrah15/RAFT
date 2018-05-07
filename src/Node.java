@@ -269,7 +269,7 @@ public class Node {
                         }
                         break;
                     case RequestVote:
-                        MessageProtos.RequestVoteResponse requestVoteResponse = (MessageProtos.RequestVoteResponse) message.getBody();
+                        MessageProtos.RequestVote requestVoteResponse = (MessageProtos.RequestVote) message.getBody();
                         if(requestVoteResponse.getTerm() > currentTerm){
                             currentTerm = requestVoteResponse.getTerm();
                             return State.FOLLOWER;

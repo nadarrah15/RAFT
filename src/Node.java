@@ -153,11 +153,14 @@ public class Node {
                                 MessageProtos.RequestVote requestVote = (MessageProtos.RequestVote) message.getBody();
                                 MessageProtos.RequestVoteResponse requestVoteResponse;
 
+                                // Use default term of 0 if log is empty
+                                int term = (log.isEmpty()) ? 0 : log.get(log.size() - 1).term;
+
                                 // Construct response
                                 if (requestVote.getTerm() >= currentTerm &&
                                         votedFor == null &&
                                         requestVote.getLastLogIndex() >= log.size() - 1 &&
-                                        requestVote.getLastLogTerm() >= log.get(log.size() - 1).term) {
+                                        requestVote.getLastLogTerm() >= term) {
                                     // Prepare to grant vote
                                     // Update currentTerm if necessary
                                     currentTerm = requestVote.getTerm();
@@ -299,7 +302,12 @@ public class Node {
         }
 
         // Loop through performLeader operations
-        sendAll(MessageProtos.AppendEntries.newBuilder().build(), 0);
+        sendAll(MessageProtos.AppendEntries.newBuilder()
+                .setTerm(currentTerm).setLeaderId(id)
+                .setPrevLogIndex(log.size() - 1)
+                .setPrevLogTerm(log.isEmpty() ? 0 : log.get(log.size() - 1).term)
+                .setLeaderCommit(commitIndex)
+                .build(), 0);
         while (true) {
             if (commitIndex > lastApplied) {
                 lastApplied++;
@@ -349,7 +357,12 @@ public class Node {
                                     break;
                             }
                         } else {
-                            sendAll(MessageProtos.AppendEntries.newBuilder().build(), 0);
+                            sendAll(MessageProtos.AppendEntries.newBuilder()
+                                    .setTerm(currentTerm).setLeaderId(id)
+                                    .setPrevLogIndex(log.size() - 1)
+                                    .setPrevLogTerm(log.isEmpty() ? 0 : log.get(log.size() - 1).term)
+                                    .setLeaderCommit(commitIndex)
+                                    .build(), 0);
                         }
 
 

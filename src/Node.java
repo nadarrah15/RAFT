@@ -59,9 +59,9 @@ public class Node {
     }
 
     public void run() {
-        System.out.println("[NODE] Switching state");
         // Commence lifetime operations
         while (true) {
+            System.out.println("[NODE] term " + currentTerm);
             switch (state) {
                 case FOLLOWER:
                     System.out.println("[NODE] State -> follower");
@@ -86,8 +86,7 @@ public class Node {
     private State performFollower() {
 
         int timeout = rand.nextInt(150) + 150;
-        long timeStart = System.nanoTime();
-
+        long timeStart = System.currentTimeMillis();
         // Do performFollower operations
         while (commitIndex > lastApplied) {
             lastApplied++;
@@ -127,7 +126,7 @@ public class Node {
                                     appendEntriesResponse = MessageProtos.AppendEntriesResponse.newBuilder().setSuccess(false).setTerm(currentTerm).build();
                                 } else {
                                     // Reset election timer
-                                    timeStart = System.nanoTime();
+                                    timeStart = System.currentTimeMillis();
                                     // Prepare success response
                                     // Update currentTerm if necessary
                                     currentTerm = appendEntries.getTerm();
@@ -234,7 +233,8 @@ public class Node {
 
             //wait for incoming message until timeout. Once timeout occurs, restart candidacy
             long end = System.currentTimeMillis();
-            if (end - start >= 300)
+
+            if (end - start >= 500)
                 break;
 
             //Receive either a heartbeat or a vote

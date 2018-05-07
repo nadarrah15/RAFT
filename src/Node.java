@@ -15,14 +15,14 @@ public class Node {
     private Random rand = new Random();
     ExecutorService service = Executors.newSingleThreadExecutor();  //TODO: Write description
     private HashSet<String> ipSet; // Stores IP addresses of fellow nodes
-    private String id;         // nodes ID TODO: never instantiated
+    private String id;         // nodes ID
     private int currentTerm; // Latest term server has seen (initialized to 0 on first boot)
     private String votedFor; // Stores candidateId that received vote in current term (or null if none)
     private ArrayList<LogEntry> log; // Stores log entries
     private int commitIndex; // Index of highest log entry known to be committed (initialized to 0)
     private int lastApplied; // Index of highest log entry applied to state machine (initialized to 0)
     private State state; // Defines follower, candidate, or leader state
-    private Net net;
+    public Net net;
     private Queue<QueueEntry> taskQueue;    //TODO: Reply to 'What is this?'
     private String database;
 
@@ -42,6 +42,7 @@ public class Node {
         this.ipSet = ipSet; // Store IP addresses in .txt file
         currentTerm = 0;
         id = Inet4Address.getLocalHost().getHostAddress();
+        log = new ArrayList<LogEntry>();
         commitIndex = 0;
         lastApplied = 0;
         taskQueue = new ConcurrentLinkedQueue<QueueEntry>();
@@ -86,113 +87,118 @@ public class Node {
         int timeout = rand.nextInt(150) + 150;
         long timeStart = System.nanoTime();
 
-        // Loop through performFollower operations
-        while (true) {
-            System.out.println("[NODE] Running follower cycle");
-            if (commitIndex > lastApplied) {
-                lastApplied++;
-                //TODO Implement applying to state machine
-                apply(log.get(lastApplied));
-            }
-            // Check taskQueue
-            QueueEntry task = taskQueue.poll();
-            // If no tasks available, just check timer
-            if (task != null) {
-                // Check entry type
-                switch (task.getType()) {
-                    case Input:
-                        // Check type of client input (command, crash, reboot, etc.)
-                        // Redirect client commands to leader
-                        break;
+        // Do performFollower operations
+        while (commitIndex > lastApplied) {
+            lastApplied++;
+            //TODO Implement applying to state machine
+            apply(log.get(lastApplied));
+        }
+        // Check taskQueue
+        QueueEntry task = taskQueue.poll();
+        // If no tasks available, just check timer
+        if (task != null) {
+            // Check entry type
+            switch (task.getType()) {
+                case Input:
+                    // Check type of client input (command, crash, reboot, etc.)
+                    // Redirect client commands to leader
+                    break;
 
-                    case Message:
-                        Message message = (Message) task.getBody();
-                        // Check if message is ingoing or outgoing
-                        if (message.isIncoming()) {
-                            // Process message
-                            switch (message.getType()) {
-                                case AppendEntries:
-                                    MessageProtos.AppendEntries appendEntries = (MessageProtos.AppendEntries) message.getBody();
-                                    MessageProtos.AppendEntriesResponse appendEntriesResponse;
+                case Message:
+                    Message message = (Message) task.getBody();
+                    // Check if message is ingoing or outgoing
+                    if (message.isIncoming()) {
+                        // Process message
+                        switch (message.getType()) {
+                            case AppendEntries:
+                                MessageProtos.AppendEntries appendEntries = (MessageProtos.AppendEntries) message.getBody();
+                                MessageProtos.AppendEntriesResponse appendEntriesResponse;
 
-                                    // Construct response
-                                    if (appendEntries.getTerm() < currentTerm ||
-                                            log.size() <= appendEntries.getPrevLogTerm() ||
-                                            log.get(appendEntries.getPrevLogIndex()).term != appendEntries.getPrevLogTerm()) {
-                                        // Prepare failure response
-                                        appendEntriesResponse = MessageProtos.AppendEntriesResponse.newBuilder().setSuccess(false).setTerm(currentTerm).build();
-                                    } else {
-                                        // Reset election timer
-                                        timeStart = System.nanoTime();
-                                        // Prepare success response
-                                        // Update currentTerm if necessary
+                                // Construct response
+                                if (log.size() <= appendEntries.getPrevLogIndex() ||
+                                        log.get(appendEntries.getPrevLogIndex()).term != appendEntries.getPrevLogTerm()) {
+                                    // Increase currentTerm to received term if received term exceeds currentTerm
+                                    if (appendEntries.getTerm() >= currentTerm) {
                                         currentTerm = appendEntries.getTerm();
-                                        appendEntriesResponse = MessageProtos.AppendEntriesResponse.newBuilder().setSuccess(true).setTerm(currentTerm).build();
+                                    }
 
-                                        if (appendEntries.getEntriesCount() > 0) {
-                                            // If existing entry conflicts with new one (same index, different terms), delete existing entry and all that follow
-                                            for (int start = appendEntries.getPrevLogIndex() + 1; log.size() > start; ) {
-                                                log.remove(start);
-                                            }
-                                            // Append new entries to log
-                                            for (int i = 0; i < appendEntries.getEntriesCount(); i++) {
-                                                MessageProtos.AppendEntries.Entry entry = appendEntries.getEntries(i);
-                                                log.add(new LogEntry(entry.getTerm(), entry.getMessage()));
-                                            }
+                                    // Prepare failure response
+                                    appendEntriesResponse = MessageProtos.AppendEntriesResponse.newBuilder().setSuccess(false).setTerm(currentTerm).build();
+                                } else {
+                                    // Reset election timer
+                                    timeStart = System.nanoTime();
+                                    // Prepare success response
+                                    // Update currentTerm if necessary
+                                    currentTerm = appendEntries.getTerm();
+                                    appendEntriesResponse = MessageProtos.AppendEntriesResponse.newBuilder().setSuccess(true).setTerm(currentTerm).build();
+
+                                    // If existing entry conflicts with new one (same index, different terms), delete existing entry and all that follow
+                                    for (int start = appendEntries.getPrevLogIndex() + 1; log.size() - 1 > start; ) {
+                                        log.remove(start);
+                                    }
+
+                                    if (appendEntries.getEntriesCount() > 0) {
+                                        // Append new entries to log
+                                        for (int i = 0; i < appendEntries.getEntriesCount(); i++) {
+                                            MessageProtos.AppendEntries.Entry entry = appendEntries.getEntries(i);
+                                            log.add(new LogEntry(entry.getTerm(), entry.getMessage()));
                                         }
                                     }
-                                    // Add pending response to task queue
-                                    taskQueue.add(new QueueEntry(QueueEntry.Type.Message, new Message(appendEntries.getLeaderId(), Message.Type.AppendEntriesResponse, appendEntriesResponse)));
-                                    break;
+                                }
+                                // Add pending response to task queue
+                                taskQueue.add(new QueueEntry(QueueEntry.Type.Message, new Message(appendEntries.getLeaderId(), Message.Type.AppendEntriesResponse, appendEntriesResponse)));
+                                break;
 
-                                case RequestVote:
-                                    MessageProtos.RequestVote requestVote = (MessageProtos.RequestVote) message.getBody();
-                                    MessageProtos.RequestVoteResponse requestVoteResponse;
+                            case RequestVote:
+                                MessageProtos.RequestVote requestVote = (MessageProtos.RequestVote) message.getBody();
+                                MessageProtos.RequestVoteResponse requestVoteResponse;
 
-                                    // Construct response
-                                    if (requestVote.getTerm() >= currentTerm &&
-                                            votedFor == null &&
-                                            requestVote.getLastLogIndex() >= log.size() - 1 &&
-                                            requestVote.getLastLogTerm() >= log.get(log.size() - 1).term) {
-                                        // Prepare to grant vote
-                                        // Update currentTerm if necessary
-                                        currentTerm = requestVote.getTerm();
-                                        requestVoteResponse = MessageProtos.RequestVoteResponse.newBuilder().setVoteGranted(true).setTerm(currentTerm).build();
-                                        votedFor = requestVote.getCandidateId();
-                                        // Reset election timer
-                                        timeStart = System.nanoTime();
-                                    } else {
-                                        // Prepare to deny vote
-                                        requestVoteResponse = MessageProtos.RequestVoteResponse.newBuilder().setVoteGranted(false).setTerm(currentTerm).build();
-                                    }
-                                    // Add pending response to task queue
-                                    taskQueue.add(new QueueEntry(QueueEntry.Type.Message, new Message(requestVote.getCandidateId(), Message.Type.RequestVoteResponse, requestVoteResponse)));
-                                    break;
-                                // Ignore incoming AppendEntriesResponse, RequestVoteResponse tasks as follower
-                            }
-                        } else {
-                            // If message is outgoing, send response
-                            switch (message.getType()) {
-                                case AppendEntriesResponse:
-                                    MessageProtos.AppendEntriesResponse appendEntriesResponse = (MessageProtos.AppendEntriesResponse) message.getBody();
-                                    byte[] data = appendEntriesResponse.toByteArray();
-                                    // Call Net object to actually send message across sockets
-                                    net.send(message.getRecipient(), PORT, 1, data.length, data);
-                                    break;
-                                case RequestVoteResponse:
-                                    MessageProtos.RequestVoteResponse requestVoteResponse = (MessageProtos.RequestVoteResponse) message.getBody();
-                                    data = requestVoteResponse.toByteArray();
-                                    // Call Net object to actually send message across sockets
-                                    net.send(message.getRecipient(), PORT, 3, data.length, data);
-                                    break;
-                                // Ignore outgoing AppendEntries, RequestVote tasks as follower
-                            }
+                                // Construct response
+                                if (requestVote.getTerm() >= currentTerm &&
+                                        votedFor == null &&
+                                        requestVote.getLastLogIndex() >= log.size() - 1 &&
+                                        requestVote.getLastLogTerm() >= log.get(log.size() - 1).term) {
+                                    // Prepare to grant vote
+                                    // Update currentTerm if necessary
+                                    currentTerm = requestVote.getTerm();
+                                    requestVoteResponse = MessageProtos.RequestVoteResponse.newBuilder().setVoteGranted(true).setTerm(currentTerm).build();
+                                    votedFor = requestVote.getCandidateId();
+                                    // Reset election timer
+                                    timeStart = System.nanoTime();
+                                } else {
+                                    // Prepare to deny vote
+                                    requestVoteResponse = MessageProtos.RequestVoteResponse.newBuilder().setVoteGranted(false).setTerm(currentTerm).build();
+                                }
+                                // Add pending response to task queue
+                                taskQueue.add(new QueueEntry(QueueEntry.Type.Message, new Message(requestVote.getCandidateId(), Message.Type.RequestVoteResponse, requestVoteResponse)));
+                                break;
+                            // Ignore incoming AppendEntriesResponse, RequestVoteResponse tasks as follower
                         }
-                }
+                    } else {
+                        // If message is outgoing, send response
+                        switch (message.getType()) {
+                            case AppendEntriesResponse:
+                                MessageProtos.AppendEntriesResponse appendEntriesResponse = (MessageProtos.AppendEntriesResponse) message.getBody();
+                                byte[] data = appendEntriesResponse.toByteArray();
+                                // Call Net object to actually send message across sockets
+                                net.send(message.getRecipient(), PORT, 1, data.length, data);
+                                break;
+                            case RequestVoteResponse:
+                                MessageProtos.RequestVoteResponse requestVoteResponse = (MessageProtos.RequestVoteResponse) message.getBody();
+                                data = requestVoteResponse.toByteArray();
+                                // Call Net object to actually send message across sockets
+                                net.send(message.getRecipient(), PORT, 3, data.length, data);
+                                break;
+                            // Ignore outgoing AppendEntries, RequestVote tasks as follower
+                        }
+                    }
             }
-            // Become candidate if election timer expires
-            if (System.nanoTime() - timeStart >= timeout)
-                return State.CANDIDATE;
+        }
+        // Become candidate if election timer expires
+        if (System.nanoTime() - timeStart >= timeout)
+            return State.CANDIDATE;
+        else {
+            return State.FOLLOWER;
         }
     }
 
@@ -226,7 +232,7 @@ public class Node {
 
             //wait for incoming message until timeout. Once timeout occurs, restart candidacy
             long end = System.nanoTime();
-            if (end - start == 500)
+            if (end - start >= 500)
                 break;
 
             //Receive either a heartbeat or a vote
@@ -238,24 +244,25 @@ public class Node {
              */
 
             //determine message type
-            if(entry != null){
+            if (entry != null) {
                 message = (Message) entry.getBody();
                 switch (message.getType()) {
                     case AppendEntries:
                         MessageProtos.AppendEntries appendMessage = (MessageProtos.AppendEntries) message.getBody();
                         //check to see if this is the real leader
-                        if (appendMessage.getTerm() >= currentTerm){
+                        if (appendMessage.getTerm() >= currentTerm) {
                             addToFront(entry);
                             return State.FOLLOWER;
                         }
                         break;
                     case RequestVoteResponse:
                         MessageProtos.RequestVoteResponse response = (MessageProtos.RequestVoteResponse) message.getBody();
-                        if(response.getVoteGranted()) {
+                        if (response.getVoteGranted()) {
                             numVotes++;
                             start = System.currentTimeMillis();
                             //check if we have majority
-                            if (numVotes > ipSet.size() / 2)
+                            //TODO Determine correct majority
+                            if (numVotes > ipSet.size() / 2 + 1)
                                 return State.LEADER;
                         }
                         break;
@@ -279,7 +286,6 @@ public class Node {
         while (true) {
             if (commitIndex > lastApplied) {
                 lastApplied++;
-                //TODO Implement applying to state machine
                 apply(log.get(lastApplied));
             }
 
@@ -340,7 +346,7 @@ public class Node {
     }
 
     //adds entry to the front of the queue
-    private void addToFront(QueueEntry entry){
+    private void addToFront(QueueEntry entry) {
         Queue<QueueEntry> temp = new ConcurrentLinkedQueue<QueueEntry>();   //TODO: make sure this is the right structure
         temp.add(entry);
         temp.addAll(taskQueue);

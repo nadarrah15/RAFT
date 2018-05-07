@@ -8,9 +8,19 @@ import java.util.Set;
 public class Net {
 
     private NetSerializer serializer;
+    private boolean isPartitioned;
 
     public Net(NetSerializer serializer) {
         this.serializer = serializer;
+        isPartitioned = false;
+    }
+
+    public boolean getIsPartitioned() {
+        return isPartitioned;
+    }
+
+    public void setIsPartitioned(boolean isPartitioned) {
+        this.isPartitioned = isPartitioned;
     }
 
     public void listen(int port) throws Exception {
@@ -20,25 +30,29 @@ public class Net {
         Runnable rs = () -> {
             try {
                 ServerSocket serverSocket = new ServerSocket(port);
-
+                serverSocket.setSoTimeout(0); // Sets infinite timeout for testing
                 while (true) {
-                    Socket clientSocket = serverSocket.accept();
-                    // New thread per client
-                    Runnable rc = () -> {
-                        try {
-                            DataInputStream dis = new DataInputStream(clientSocket.getInputStream());
-                            int type = dis.readInt();
-                            byte[] data = new byte[dis.readInt()];
+                    if (!isPartitioned) {
 
-                            dis.readFully(data);
-                            serializer.receive(type, data);
-                            clientSocket.close();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
+                        Socket clientSocket = serverSocket.accept();
+                        clientSocket.setSoTimeout(0); // Sets infinite timeout for testing
+                        // New thread per client
+                        Runnable rc = () -> {
+                            try {
+                                DataInputStream dis = new DataInputStream(clientSocket.getInputStream());
+                                int type = dis.readInt();
+                                byte[] data = new byte[dis.readInt()];
 
-                    };
-                    new Thread(rc).start();
+                                dis.readFully(data);
+                                serializer.receive(type, data);
+                                clientSocket.close();
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        };
+                        // Run new thread
+                        new Thread(rc).start();
+                    }
                 }
 
             } catch (IOException e) {

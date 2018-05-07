@@ -341,11 +341,11 @@ public class Node {
                 Message message;
                 switch (entry.getType()) {
                     case Input:
-                        message = (Message) entry.getBody();
-                        LogEntry e = new LogEntry(currentTerm, message.getBody().toString());
+                        String body = (String) entry.body;
+                        LogEntry e = new LogEntry(currentTerm, body);
                         apply(e);
                         lastApplied++;
-                        byte[] data = message.toString().getBytes();
+                        byte[] data = body.getBytes();
                         try {
                             sendAll(MessageProtos.AppendEntries.newBuilder().setTerm(currentTerm).setLeaderId(id).setPrevLogIndex(commitIndex).setPrevLogTerm(currentTerm).setEntries(commitIndex + 1, MessageProtos.AppendEntries.Entry.parseFrom(data)).build(), 0);
                         }catch(InvalidProtocolBufferException ex){

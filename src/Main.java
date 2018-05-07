@@ -10,7 +10,7 @@ public class Main {
 
     final static String IP_FILE = "ipSet.txt";
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws Exception {
 
         Scanner scan = new Scanner(new File(IP_FILE));
         int nodes = scan.nextInt();

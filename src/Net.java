@@ -1,6 +1,7 @@
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.net.ConnectException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Set;
@@ -35,6 +36,7 @@ public class Net {
                     if (!isPartitioned) {
 
                         Socket clientSocket = serverSocket.accept();
+                        System.out.println("[NET] Connected with " + clientSocket.getInetAddress());
                         clientSocket.setSoTimeout(0); // Sets infinite timeout for testing
                         // New thread per client
                         Runnable rc = () -> {
@@ -87,8 +89,9 @@ public class Net {
 
                 sendSocket.close();
                 dos.close();
+                System.out.println("Sent");
             } catch (IOException e) {
-                e.printStackTrace();
+                //e.printStackTrace();
             }
         };
 

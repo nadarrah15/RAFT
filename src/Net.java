@@ -89,7 +89,7 @@ public class Net {
 
                 sendSocket.close();
                 dos.close();
-                System.out.println("Sent");
+                System.out.println("[NET] Sent");
             } catch (IOException e) {
                 //e.printStackTrace();
             }

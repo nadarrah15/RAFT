@@ -232,6 +232,7 @@ public class Node {
 
             //wait for incoming message until timeout. Once timeout occurs, restart candidacy
             long end = System.currentTimeMillis();
+
             if (end - start >= 500)
                 break;
 
@@ -357,7 +358,7 @@ public class Node {
     private void sendAll(com.google.protobuf.GeneratedMessageV3 message) {
         //TODO: write code to send the message to all the nodes
         byte[] data = message.toByteArray();
-        net.send(ipSet, 6667, 1, data.length, data);
+        net.send(ipSet, 6666, 1, data.length, data);
     }
 
     //receives message from other nodes

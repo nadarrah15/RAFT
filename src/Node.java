@@ -256,6 +256,7 @@ public class Node {
                             addToFront(entry);
                             return State.FOLLOWER;
                         }
+                        message = null;
                         break;
                     case RequestVoteResponse:
                         MessageProtos.RequestVoteResponse response = (MessageProtos.RequestVoteResponse) message.getBody();
@@ -266,14 +267,16 @@ public class Node {
                             //TODO Determine correct majority
                             if (numVotes > ipSet.size() / 2 + 1)
                                 return State.LEADER;
+                            message = null;
                         }
                         break;
                     case RequestVote:
-                        MessageProtos.RequestVote requestVoteResponse = (MessageProtos.RequestVote) message.getBody();
-                        if(requestVoteResponse.getTerm() > currentTerm){
-                            currentTerm = requestVoteResponse.getTerm();
+                        MessageProtos.RequestVote requestVote1 = (MessageProtos.RequestVote) message.getBody();
+                        if(requestVote1.getTerm() > currentTerm){
+                            currentTerm = requestVote1.getTerm();
                             return State.FOLLOWER;
                         }
+                        message = null;
                         break;
                 }
             }

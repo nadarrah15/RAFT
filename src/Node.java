@@ -102,13 +102,13 @@ public class Node {
         int timeout = rand.nextInt(150) + 150;
         long timeStart = System.currentTimeMillis();
         // Do performFollower operations
-        while (commitIndex > lastApplied) {
-            lastApplied++;
-            //TODO Implement applying to state machine
-            apply(log.get(lastApplied));
-        }
-        // Check taskQueue
         while(true) {
+            while (commitIndex > lastApplied) {
+                lastApplied++;
+                //TODO Implement applying to state machine
+                apply(log.get(lastApplied));
+            }
+            // Check taskQueue
             QueueEntry task = taskQueue.poll();
             // If no tasks available, just check timer
             if (task != null) {
@@ -215,9 +215,6 @@ public class Node {
             // Become candidate if election timer expires
             if (System.currentTimeMillis() - timeStart >= timeout)
                 return State.CANDIDATE;
-            //else {
-               // return State.FOLLOWER;
-            //}
         }
     }
 
